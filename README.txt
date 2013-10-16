@@ -17,6 +17,7 @@ Markdown:
 	- It's a HTML superset. Generating non HTML is painful.
 	- Whitespace sensitive to the point of tears. Indents must be 4 spaces 
 	  in some variants. Line continuations are 2 trailing spaces.
+	- Zero tests or specs or grammars.
 
 LaTeX:
 
@@ -42,7 +43,6 @@ Restructured Text:
 	- Extensible blocks but hard to add inline markup, without using
 	  substitutions.
 	- Table syntax involves shunting.
-	- Zero tests or specs or grammars.
 
 Those problems in depth:
 
