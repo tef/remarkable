@@ -68,24 +68,26 @@ Proposal
 Goals:
 
 	- Simple and short core grammar that is easy to remember. 
- 	- A set of built in commands for document/book markup.
-	- Easy to define new commands without inventing new syntax
-	- Commands can take parameters, rather than needing new commands
+	- Easy to write a parser for the core grammar.
+	- Easy to define new commands without inventing new syntax.
+	- Commands can take parameters, rather than needing new commands.
+	- Commands can be inline, multiline, or take an indented block.
+	- Commands can be raw, so the text contents do not need to be escaped.
 	- A Text File renders as a text file. I.e linebreaks work by default.
+ 	- A set of built in commands for document/book markup.
+ 	- Easy to generate epub, HTML, PDF from. 
 	- ASCII-Art markup will exist, but as shorthand for existing commands
 	  within the core grammar. 
- 	- Easy to generate epub, HTML, PDF from. 
-	- Easy to write a parser for the core grammar.
 	- Shorthand will not require exact indentation, trailing whitespace
           or drawing ascii art.
 
-Proposed Core Grammar: Plain text with embeded commands 
+Core Grammar: Plain text with embedded commands 
 
 Rule 0: \ is the command/escape character. \\ is a literal \ 
 
 Rule 1: Line breaks are line breaks, unless preceded with a \
 
-Rule 2: Markup directives: \name[args][args][...]
+Rule 2: Markup directives without text: \name[args][args][...]
 	where args are optional, optionally followed by {} to end command.
 
 	These will be page elements which do not change surrounding text
@@ -94,12 +96,14 @@ Rule 2: Markup directives: \name[args][args][...]
 	Or these commands will affect the entire document, i.e \author
 	To only affect specfic text, you need an inline or block command. 
 	
-Rule 3: Inline Markup: \name[args][...]{text}, 
+Rule 3: Inline Markup: \name[args][...]{text}, \name[args]{{{text}}} 
 	where args are optional. 
 	
 	These commands should only apply to the text inside {}. There is
 	no LaTeX style \begin or \end. Text inside {}'s can span multiple
 	lines.
+
+	Optionally, {{{,}}} can be used instead. 
 
 Rule 4: Block Markup:  \name[args][...]:: followed by a
         consistently indented block, ignoring blank lines.
@@ -112,7 +116,13 @@ Rule 5: Markup arguments have two forms: Positional and named
 
 	[foo] passes the arg "foo". [name=foo], is the named form.
 
-Rule 6: Shorthand will be defined interms of existing markup:
+Rule 6: Raw blocks \name!{text}
+	The command name can be suffixed with a ! to tell the parser
+	to ignore any commands inside. 
+
+	\code![python]{{{print("Hello, world")}}}
+
+Rule 7: Shorthand will be defined interms of existing markup:
 
 	As to which ascii art gets included, i'm open to a mix of
 	RST and Markdown conventions. For example:
@@ -132,7 +142,7 @@ Example of syntax: (No shorthand, command names may change)
 	When a document walks in oh god what am I doing with my life \
 	this is a waste.
 
-	\code[python]::
+	\code![python]::
 		print("Hello, World")
 	
 	\list{
@@ -142,13 +152,26 @@ Example of syntax: (No shorthand, command names may change)
 	Hurt
 	}
 
+	
 
-Notes:
+Bikeshedding
+--------------------------------------------------------------------------------
 
-The bikeshed will be which ascii art shorthand gets included, and the names of
-commands, but this could be overridden with other commands.
+Grammar tweaks and notes:
+	
+	\foo followed by {not text} needs to be
+	 \foo\{not text} or \foo{}{not text}. 
+	 
+	Should the indent marker be '::' or otherwise.
+		:: is used by Restructured Text.
+
+	Should the raw block character be !, i.e \foo!{....}
+
+	Should multiline, or raw  blocks be forced to use {{{, }}} instead
+	of {}, to avoid ambiguity?
 
 Command Names:
+
 	I imagine it will be a mixture of HTML, LaTeX and ReStructured Text
 	
 	Example:
@@ -172,7 +195,8 @@ Directives:
 	We may have directives to turn on/off features like
 	URLs into links, Smart Quotes,  
 
-Macros?
+Macros:
+
 	Although TeX is turing complete, I'm happy to pass the buck to
 	the tool parsing the text, but it might be useful to have
 	search/replace macros as a possible command:
