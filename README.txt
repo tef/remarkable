@@ -1,8 +1,5 @@
 "Why I hate your document markup format" 
-
 --------------------------------------------------------------------------------
-
-Abstract
 
 I have to write worksheets. Friends have to write technical documentation. I 
 would like a pleasant way to write and manage documents that can be translated 
@@ -10,6 +7,9 @@ into web ready, ebook, and print formats. Without crying.
 
 And yes, I have seen that XKCD. So let's look at the options:
 
+
+Existing Solutions
+--------------------------------------------------------------------------------
 Markdown:
 
 	- Considerable amounts of ASCII art. 
@@ -62,26 +62,34 @@ Those problems in depth:
 	Semantic whitespace can be useful, but exact numbers of whitespace, 
 	or trailing whitespace are a pain in the butt.
 
-What I desire:
+Proposal
+--------------------------------------------------------------------------------
 
-	- A Text File renders as a text file. I.e linebreaks work, 
-	  unless escaped
-	- Inline and Blocks can be extended and parameterized
-	- All commands can be expressed without ascii art, although
-	  some will have shorthand.
-	- Well defined grammar
+Goals:
 
-Proposed Grammar: 
+	- Simple and short core grammar that is easy to remember. 
+ 	- A set of built in commands for document/book markup.
+	- Easy to define new commands without inventing new syntax
+	- Commands can take parameters, rather than needing new commands
+	- A Text File renders as a text file. I.e linebreaks work by default.
+	- ASCII-Art markup will exist, but as shorthand for existing commands
+	  within the core grammar. 
+ 	- Easy to generate epub, HTML, PDF from. 
+	- Easy to write a parser for the core grammar.
+	- Shorthand will not require exact indentation, trailing whitespace
+          or drawing ascii art.
 
-Rule 0: \ is the command character. \\ is a literal \ 
+Proposed Core Grammar: Plain text with embeded commands 
+
+Rule 0: \ is the command/escape character. \\ is a literal \ 
 
 Rule 1: Line breaks are line breaks, unless preceded with a \
 
 Rule 2: Markup directives: \name[args][args][...]
-	where args are optional.
+	where args are optional, optionally followed by {} to end command.
 
 	These will be page elements which do not change surrounding text
-	I.e \pagebreak, \contents
+	I.e \pagebreak, \contents, or \u[65] for unicode escapes.
 
 	Or these commands will affect the entire document, i.e \author
 	To only affect specfic text, you need an inline or block command. 
@@ -98,6 +106,8 @@ Rule 4: Block Markup:  \name[args][...]:: followed by a
 
 	i.e similar to how RST/GFM works.
 
+	Why ::? I'm copying it from Restructured Text.
+
 Rule 5: Markup arguments have two forms: Positional and named
 
 	[foo] passes the arg "foo". [name=foo], is the named form.
@@ -113,10 +123,75 @@ Rule 6: Shorthand will be defined interms of existing markup:
 	These should not include having to count whitespace,
 	using trailing whitespace, or precision ascii-art.
 
-This seems to be relatively easy to write, and relatively easy to parse.
-The grammar isn't tied to the document formatting, and is pretty easy to
-remember the core rules. The bikeshed will be which ascii art shorthand
-gets included, and the names of commands, but this could be set.
 
-In theory we could use a directive, ala \shorthand[markdown] to control
-which commands are used.
+Example of syntax: (No shorthand, command names may change)
+
+	\h[1]{Introduction}
+
+	I like markup, and I cannot lie. You other coders can't deny. \
+	When a document walks in oh god what am I doing with my life \
+	this is a waste.
+
+	\code[python]::
+		print("Hello, World")
+	
+	\list{
+	Why
+	Does
+	It
+	Hurt
+	}
+
+
+Notes:
+
+The bikeshed will be which ascii art shorthand gets included, and the names of
+commands, but this could be overridden with other commands.
+
+Command Names:
+	I imagine it will be a mixture of HTML, LaTeX and ReStructured Text
+	
+	Example:
+		\code[python]{}, \h[1], \b, \i{...}, \pagebreak
+		\note, \footnote, \sidenote, \ref, \link, 
+		\author, \title, \version, \list, \table, \raw
+
+Shorthand:
+
+	I imagine the shorthand it will be a mixture of Markdown and
+	Restructured Text conventions.
+
+	*bold*, _italic_, `fixed`
+	# h1, ## h2, ### h3, and some shorthand for lists.
+
+	But I don't think [foo](link) will be kept in. it will be
+	\link[url]{text}.
+
+Directives:
+	
+	We may have directives to turn on/off features like
+	URLs into links, Smart Quotes,  
+
+Macros?
+	Although TeX is turing complete, I'm happy to pass the buck to
+	the tool parsing the text, but it might be useful to have
+	search/replace macros as a possible command:
+
+	\shorthand[^(#+)(.*)]{\h[$1]{$2}}
+
+	It would be pleasing to be able to define all of the shorthand
+	in a prelude, rather than the parser, but debugging the output
+	after preprocessing will be unpleasant.
+
+	Markdown and WikiText are both defined as a series of Regular expressions
+	Let's not go down that way. PLEASE.
+
+Things I will have to do before this is close to usable
+--------------------------------------------------------------------------------
+
+[ ] Define core grammar
+[ ] Write parser, tests
+[ ] Define core commands for markup
+[ ] Define shorthand
+[ ] Build HTML, PDF, epub output
+
