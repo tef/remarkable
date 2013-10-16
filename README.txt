@@ -21,10 +21,14 @@ Markdown:
 LaTeX:
 
 	- Turing Complete.
-	- Weirdo error messages. You can't do that in horizontal mode. Overful hbox.
+	- Weirdo error messages. You can't do that in horizontal mode. Overful
+	  hbox.
 	- Hard to recall edge cases of syntax.
 	- Won't do EPUB, HTML, pleasantly. Tied to print output.
 	- Possible to extend, but only in weirdo arcane macro language.
+	- It's not a document format bob, it's a turing complete 
+	  macro system. Did you just tell me to go fuck myself?
+	- Unicode.
 
 HTML:
 
