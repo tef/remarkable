@@ -44,6 +44,10 @@ Restructured Text:
 	  substitutions.
 	- Table syntax involves shunting.
 
+Scribble
+	http://docs.racket-lang.org/scribble/
+	- Tied to racket.
+
 Those problems in depth:
 
 	ASCII Art involves lots of pissing around to make the text render
