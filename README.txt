@@ -21,7 +21,8 @@ Markdown:
 
 LaTeX:
 
-	- Turing Complete.
+	- Turing Complete. Syntax is mostly Quirks.
+	- How do I escape symbols? OH GOD HELP ME.
 	- Weirdo error messages. You can't do that in horizontal mode. Overful
 	  hbox.
 	- Hard to recall edge cases of syntax.
@@ -33,7 +34,7 @@ LaTeX:
 
 HTML:
 
-	- Clunky at times.
+	- Clunky at times, some formatting built in.
 	- Won't generate references, indices, tables of contents.
 	- Manual Demarcation of Paragraphs
 
@@ -71,21 +72,52 @@ Proposal
 
 Goals:
 
-	- Simple and short core grammar that is easy to remember. 
-	- Easy to write a parser for the core grammar.
-	- Easy to define new commands without inventing new syntax.
-	- Commands can take parameters, rather than needing new commands.
-	- Commands can be inline, multiline, or take an indented block.
-	- Commands can be raw, so the text contents do not need to be escaped.
-	- A Text File renders as a text file. I.e linebreaks work by default.
- 	- A set of built in commands for document/book markup.
+	- Simple and short core grammar that is easy to remember, and to parse.
  	- Easy to generate epub, HTML, PDF from. 
+
+	- A Text File renders as a text file. I.e linebreaks work by default.
+	- Commands should have a name, and optionally arguments, or a text block.
+	- Text blocks can be inline, multiline, or an indented block.
+	- Text blocks can have their contents marked as raw, and left unparsed.
+
+	- A set of built in commands for common markup
 	- ASCII-Art markup will exist, but as shorthand for existing commands
 	  within the core grammar. 
 	- Shorthand will not require exact indentation, trailing whitespace
           or drawing ascii art.
 
-Core Grammar: Plain text with embedded commands 
+
+Overview:
+
+	Linebreaks mark paragraphs.  Escape \ or newlines with \
+	Commands are \arg[name][..] with an optional text block, either
+	- {text}
+	- {{{text}}}
+	- :: <indented block or blank lines>
+	To turn off intepretation of text argument, use a !, \cmd!{text}
+	Ascii-Art directives are shorthand for \cmd{...}
+
+Example of syntax: (No shorthand, command names may change)
+
+	\h[1]{Introduction}
+
+	I like markup, and I cannot lie. You other coders can't deny. \
+	When a document walks in oh god what am I doing with my life \
+	this is a waste.
+
+	\code![python]::
+		print("Hello, World")
+	
+		print("Still in the python block")
+
+	\list{
+	Why
+	Does
+	It
+	Hurt
+	}
+
+Syntax Rules:
 
 Rule 0: \ is the command/escape character. \\ is a literal \ 
 
@@ -120,6 +152,9 @@ Rule 5: Markup arguments have two forms: Positional and named
 
 	[foo] passes the arg "foo". [name=foo], is the named form.
 
+	We should declare a grammar for arguments. I imagine it will be
+	text, where \] can be used to insert a ]
+
 Rule 6: Raw blocks \name!{text}
 	The command name can be suffixed with a ! to tell the parser
 	to ignore any commands inside. 
@@ -137,26 +172,11 @@ Rule 7: Shorthand will be defined interms of existing markup:
 	These should not include having to count whitespace,
 	using trailing whitespace, or precision ascii-art.
 
+	Escapes should work still, so \* won't be interpreted as bold.
 
-Example of syntax: (No shorthand, command names may change)
+	Shorthand sets may be tied to directives, i.e \use[markdown, rst]
 
-	\h[1]{Introduction}
 
-	I like markup, and I cannot lie. You other coders can't deny. \
-	When a document walks in oh god what am I doing with my life \
-	this is a waste.
-
-	\code![python]::
-		print("Hello, World")
-	
-	\list{
-	Why
-	Does
-	It
-	Hurt
-	}
-
-	
 
 Bikeshedding
 --------------------------------------------------------------------------------
@@ -199,7 +219,7 @@ Directives:
 	We may have directives to turn on/off features like
 	URLs into links, Smart Quotes,  
 
-Macros:
+Macros/substitutions:
 
 	Although TeX is turing complete, I'm happy to pass the buck to
 	the tool parsing the text, but it might be useful to have
@@ -207,12 +227,17 @@ Macros:
 
 	\shorthand[^(#+)(.*)]{\h[$1]{$2}}
 
+	or perhaps
+
+	\shorthand[line][pattern]{replacement}
+	\shorthand[inline][pattern]{replacement}
+
 	It would be pleasing to be able to define all of the shorthand
 	in a prelude, rather than the parser, but debugging the output
 	after preprocessing will be unpleasant.
 
-	Markdown and WikiText are both defined as a series of Regular expressions
-	Let's not go down that way. PLEASE.
+	Markdown and WikiText are both defined as a series of regular
+	expressions. Let's not go down that way. PLEASE.
 
 Things I will have to do before this is close to usable
 --------------------------------------------------------------------------------
