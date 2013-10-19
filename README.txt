@@ -86,6 +86,11 @@ Goals:
 	- Shorthand will not require exact indentation, trailing whitespace
           or drawing ascii art.
 
+Non Goals:
+	- Turing Complete. 
+	  A larger attack surface, and makes it harder to process documents.
+	- Macros
+	  This is not a priority, but something that is being considered.
 
 Overview:
 
@@ -238,6 +243,8 @@ Macros/substitutions:
 
 	Markdown and WikiText are both defined as a series of regular
 	expressions. Let's not go down that way. PLEASE.
+
+	This is something that isn't a priority.
 
 Things I will have to do before this is close to usable
 --------------------------------------------------------------------------------
