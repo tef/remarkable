@@ -7,9 +7,50 @@ into web ready, ebook, and print formats. Without crying.
 
 And yes, I have seen that XKCD. So let's look at the options:
 
+              +
+  Extensible  | LaTeX
+              |
+              |          ReStructuredText  
+              |
+              |  HTML
+  Fixed       |                    Markdown
+              |
+              +------------------------------+
+                
+                Verbose             Shorthand
+       
+Markdown is great for small comments, blog posts. LaTeX is good for writing
+a book on Mathematics. RST is good for python documentation, and HTML is good
+for webpages.
+
+Shorthand is good for blog posts, and making markup "look just like text", but
+it comes at a price.
+
+- Some require lining up characters and precision formatting. i.e
+  exact underlines. This turns into drawing ASCII art.
+
+- Nesting becomes awful. To put lists within lists often involves
+  extra formatting or indentation to get it to work. 
+
+- Implicit markup leads to Accidental commands. Sentences which start with 
+  a letter or number. Including a document can change header heirarchy.
+  It becomes harder to see what is being parsed, and much harder to 
+  just get it to work.
+
+- Semantic whitespace can be useful, but exact numbers of whitespace, 
+  or trailing whitespace are a pain in the butt.
+
+- New commands all look different, and it can be hard to recall each 
+  special parsing case, or introduce new forms, without creating 
+  incompatible variants.
+
+What I really desire is something with a handful of shorthand for very common
+cases, and a uniform syntax for commands, rather than different syntax
+for inline, block, and other document markup.
 
 Existing Solutions
 --------------------------------------------------------------------------------
+
 Markdown:
 
 	- Considerable amounts of ASCII art. 
@@ -18,6 +59,7 @@ Markdown:
 	- Whitespace sensitive to the point of tears. Indents must be 4 spaces 
 	  in some variants. Line continuations are 2 trailing spaces.
 	- Zero tests or specs or grammars.
+        - Great for blog comments. Awful for books.
 
 LaTeX:
 
@@ -36,36 +78,37 @@ HTML:
 
 	- Clunky at times, some formatting built in.
 	- Won't generate references, indices, tables of contents.
-	- Manual Demarcation of Paragraphs
+	- Manual Demarcation of Paragraphs, Zero Shorthand.
 
-Restructured Text:
+ReStructuredText:
 
 	- Some ASCII art (header titles, etc)
+        - Headers are defined implicitly, so including a document
+          can change what level headers are.
 	- Extensible blocks but hard to add inline markup, without using
-	  substitutions.
-	- Table syntax involves shunting.
+	  substitutions, or roles.
+	- Table syntax, Header names involves shunting characters around
+        - Reliance on shorthand makes it hard to remember all the options and 
+          rules.
 
-Scribble
+Scribble:
+
 	http://docs.racket-lang.org/scribble/
 	- Tied to racket.
 
-Those problems in depth:
 
-	ASCII Art involves lots of pissing around to make the text render
-	properly. For ex: In RST I cannot change a header name without
-	adding extra - underneath. It also means that words_like_this can
-	be mangled, as well as accidental formatting.
 
-	A lack of a spec or grammar means each variant handles text
-	differently. Similarly for a lack of tests. Every implementation
-	of markdown handles things differently.
+Winner?
 
-	Without directives or extensible blocks, commands vary by
-	implementation. In Markdown, tables, or code blocks take different
-	forms.
+        ReStructuredText is the closest to what I desire, but the reliance
+        on ascii markup causes headaches in longer documents.   
 
-	Semantic whitespace can be useful, but exact numbers of whitespace, 
-	or trailing whitespace are a pain in the butt.
+        Although some shorthand is useful, being able to unambiguously
+        markup text is useful too. 
+
+        What I desire is something similar in scope to ReStructuredText
+        but with a standard mechanism for markup directives.
+        
 
 Proposal
 --------------------------------------------------------------------------------
@@ -76,7 +119,7 @@ Goals:
  	- Easy to generate epub, HTML, PDF from. 
 
 	- A Text File renders as a text file. I.e linebreaks work by default.
-	- Commands should have a name, and optionally arguments, or a text block.
+	- Optionally, Commands take arguments, and/or a text block.
 	- Text blocks can be inline, multiline, or an indented block.
 	- Text blocks can have their contents marked as raw, and left unparsed.
 
@@ -151,7 +194,7 @@ Rule 4: Block Markup:  \name[args][...]:: followed by a
 
 	i.e similar to how RST/GFM works.
 
-	Why ::? I'm copying it from Restructured Text.
+	Why ::? I'm copying it from ReStructuredText.
 
 Rule 5: Markup arguments have two forms: Positional and named
 
@@ -192,7 +235,7 @@ Grammar tweaks and notes:
 	 \foo\{not text} or \foo{}{not text}. 
 	 
 	Should the indent marker be '::' or otherwise.
-		:: is used by Restructured Text.
+		:: is used by ReStructuredText.
 
 	Should the raw block character be !, i.e \foo!{....}
 
@@ -201,7 +244,7 @@ Grammar tweaks and notes:
 
 Command Names:
 
-	I imagine it will be a mixture of HTML, LaTeX and ReStructured Text
+	I imagine it will be a mixture of HTML, LaTeX and ReStructuredText
 	
 	Example:
 		\code[python]{}, \h[1], \b, \i{...}, \pagebreak
@@ -211,7 +254,7 @@ Command Names:
 Shorthand:
 
 	I imagine the shorthand it will be a mixture of Markdown and
-	Restructured Text conventions.
+	ReStructuredText conventions.
 
 	*bold*, _italic_, `fixed`
 	# h1, ## h2, ### h3, and some shorthand for lists.
@@ -224,27 +267,41 @@ Directives:
 	We may have directives to turn on/off features like
 	URLs into links, Smart Quotes,  
 
-Macros/substitutions:
+Turing Complete:
 
-	Although TeX is turing complete, I'm happy to pass the buck to
-	the tool parsing the text, but it might be useful to have
-	search/replace macros as a possible command:
+	The goal is to write a declarative markup, akin to HTML,
+	ReStructuredText, or markdown. Rather than a turing-complete
+	language like TeX, PDF or Postscript.
 
-	\shorthand[^(#+)(.*)]{\h[$1]{$2}}
+	This is something that isn't a priority, but would only
+	be considered if other techniques fail.
 
-	or perhaps
+	Turing completeness is an attack surface. I do not
+	want it to be required to parse, or render the document.
+
+Macros/Substitutions:
+
+	We should be able to do RST style substitutions, for common 
+	phrases, like \replace[\foo]{Foo Corp Inc}, but this doesn't
+	require turing completeness.
+
+	Ideally, we should be able to define the ascii art shorthand
+	in a prelude, rather than baking it in to the parser. This
+	would allow users to switch between RST and Markdown flavours
+	using directives
 
 	\shorthand[line][pattern]{replacement}
 	\shorthand[inline][pattern]{replacement}
 
-	It would be pleasing to be able to define all of the shorthand
-	in a prelude, rather than the parser, but debugging the output
-	after preprocessing will be unpleasant.
+	I.e we can define limited substitutions based around common
+	markup patterns: *word*, -lists
 
-	Markdown and WikiText are both defined as a series of regular
-	expressions. Let's not go down that way. PLEASE.
+	However, I do not think regular expressions would be a pleasant
+	way to write, test, or debug markup. We should learn the lessons
+	of WikiText and Markdown.
 
-	This is something that isn't a priority.
+	The goal is to be able to have the ascii-art shorthand
+	without baking it into the grammar.
 
 Things I will have to do before this is close to usable
 --------------------------------------------------------------------------------
