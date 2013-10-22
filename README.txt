@@ -317,4 +317,6 @@ Things I will have to do before this is close to usable
 [ ] Define core commands for markup
 [ ] Define shorthand
 [ ] Build HTML, PDF, epub output
+[ ] Pandoc support
+
 
