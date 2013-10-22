@@ -170,6 +170,7 @@ Syntax Rules:
 Rule 0: \ is the command/escape character. \\ is a literal \ 
 
 Rule 1: Line breaks are line breaks, unless preceded with a \
+	Two line breaks are the end of a paragraph.
 
 Rule 2: Markup directives without text: \name[args][args][...]
 	where args are optional, optionally followed by {} to end command.
@@ -262,6 +263,9 @@ Shorthand:
 	But I don't think [foo](link) will be kept in. it will be
 	\link[url]{text}.
 
+	One linebreak = a linebreak
+	Two linebreaks = a paragraph, ala GFM
+
 Directives:
 	
 	We may have directives to turn on/off features like
@@ -302,6 +306,8 @@ Macros/Substitutions:
 
 	The goal is to be able to have the ascii-art shorthand
 	without baking it into the grammar.
+	
+	Templating is closely related too.
 
 Things I will have to do before this is close to usable
 --------------------------------------------------------------------------------
