@@ -309,6 +309,10 @@ Macros/Substitutions:
 	
 	Templating is closely related too.
 
+Linebreaks:
+	manual linebreaking is awful, but automatic ones aren't great either
+	welp
+
 Things I will have to do before this is close to usable
 --------------------------------------------------------------------------------
 
