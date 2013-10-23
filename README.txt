@@ -137,7 +137,7 @@ Non Goals:
 
 Overview:
 
-	Linebreaks mark paragraphs.  Escape \ or newlines with \
+	Double linebreaks mark paragraphs.
 	Commands are \arg[name][..] with an optional text block, either
 	- {text}
 	- {{{text}}}
@@ -149,8 +149,8 @@ Example of syntax: (No shorthand, command names may change)
 
 	\h[1]{Introduction}
 
-	I like markup, and I cannot lie. You other coders can't deny. \
-	When a document walks in oh god what am I doing with my life \
+	I like markup, and I cannot lie. You other coders can't deny. 
+	When a document walks in oh god what am I doing with my life 
 	this is a waste.
 
 	\code![python]::
@@ -169,8 +169,7 @@ Syntax Rules:
 
 Rule 0: \ is the command/escape character. \\ is a literal \ 
 
-Rule 1: Line breaks are line breaks, unless preceded with a \
-	Two line breaks are the end of a paragraph.
+Rule 1: Two line breaks are the end of a paragraph.
 
 Rule 2: Markup directives without text: \name[args][args][...]
 	where args are optional, optionally followed by {} to end command.
