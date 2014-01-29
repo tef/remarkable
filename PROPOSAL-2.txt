@@ -1,65 +1,72 @@
+"I also dream about a modern replacement for LaTeX designed from the ground up
+ to target multiple output formats (at least PDF, HTML, EPUB)"
+
+	-- John MacFarlane, author of Pandoc
+
 Proposal
 --------------------------------------------------------------------------------
 
-Goals:
+A markup language to produce PDF, HTML, EPUB documents
 
-	- Simple and short core grammar that is easy to remember, and to parse.
- 	- Easy to generate epub, HTML, PDF from. 
-	- A set of built in commands for common markup
-	  within the core grammar. 
-	- Commands will not require exact indentation, trailing whitespace
-          or drawing ascii art.
-	- Allow embedding semistructured data, for command arguments, or meta
-	  data
+- TeX like syntax, but vastly simpler parsing rules, and escaping.
+- HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
+
+Design Goals:
+
+- No Ascii Art. All commands follow same form
+- Commands can take arguments, including text and lists of items.
+- Commands can be used to describe formatting, structure, and metadata.
+- Commands will not require exact indentation, trailing whitespace
+  or drawing ascii art.
+- Extending the language can be done through filters, programs that
+  read and produce an abstract syntax tree.
 	
 Non Goals:
-	- ASCII-Art markup. It will exist, but as shorthand for existing 
-	  commands
-	- Turing Complete. 
-	  A larger attack surface, and makes it harder to process documents.
-	- Macros
-	  This is not a priority, but something that is being considered.
 
-Overview:
+- Shorthand will not be defined in the core language, but can be 
+  added by filters.
 
-	Double linebreaks mark paragraphs.
-	Single linebreaks are whitespace.
-	Commands begin with a \, take an optional amount of arguments
-	and terminate with ; or whitespac
-	Arguments can be [list] {text}, {{{ text }}}, and the final argument
-	can be an indented block, if the command ends with ::
+- Programmable. The Language will be declarative, without macros.
+  Can be added by filters.
 
-Syntax Rules:
+Syntax
+--------------------------------------------------------------------------------
 
-Rule 0: \ is the command/escape character. \\ is a literal \ 
+Rule 0: \ is the command/escape character.
+	 \\ is a literal \, simarly for \, \{ \} \[ \] \! \: \; 
 
 Rule 1: One line break is a space.
 	Two line breaks are the end of a paragraph.
 
-Rule 2: Commands begin with a \, have a name, arguments
+Rule 2: Commands begin with a \ have a name, arguments
 	and end with whitespace, or a semicolon.
 
 	i.e foo \bar baz
 	    foo \bar; baz
 	
 	Commands can have any number of arguments.
+	Command names must not contain whitespace, or control characters
+	Names must not contain the puncutation marks : \ { } [ ] ! : ;
 
 Rule 3: Text Arguments
-	Text arguments are delimited by {}'s
+	Text arguments are delimited by {}'s, or {{{,}}}
 
 	e.g \foo{bar}{baz}
+	    \lol{{{a thing}}}
+	    \section{\h1{blah}}
 
 	Commands can take multiple text arguments. 
 	Commands can also be inside text arguments. 
 
 Rule 4: Raw Text Arguments
-	Raw Text arguments are delimited by {{{ }}}
+	If the first character is a !, the text 
+	inside is treated as a raw string.
 	
-	e.g \foo{{{bar}}}
+	e.g \foo{{{!bar}}}, \foo{!bar}
 
 	Commands can take multiple raw text arguments
 	Raw Text arguments cannot contain commands.
-	Backslashes have no meaning, newlines are preserved.
+	Newlines are preserved. Backslashes are preserved.
 
 Rule 5: List Arguments
 	A command can take a list as an argument
@@ -67,55 +74,52 @@ Rule 5: List Arguments
 
 	e.g \foo[1,2,3] \bar[1]
 	
-	Lists can contain other lists, and raw/text blocks
+	Lists can contain other lists, and text blocks
 
 	e.g \foo[[1],[2]], \bar[{1,2}]
 
-	Lists can have names attached
-	Names can be raw/text blocks
-
-	e.g. \foo[a=1, b=2], \bar[{foo}=1
-
+	List items can have names attached. Names follow 
+	the same restriction as command names.
+	
+	e.g \foo[a=1, b=2]
+	
 	There is no way to escape = or , except through a text block.
 	Trailing commas are allowed, and ignored.
 
-Considering;
 
-Rule 6: Indented text argument
-	If the last argument in a command is ::
-	The next consistently indented block of text,
- 	including blank lines is used as a text argument
+Rule 6: Raw indented text argument
+	If a command has :: at the end, the next consistently
+	indented block of text, is used as a raw text argument
 
 	e.g:
 		\raw::
 			text block
 		text.
 
-	Note: It should be possible to have a raw indented block too
+	Indentation must be consistent, blank lines are skipped
+	when checking indentation levels.
+
+	Newlines, backslashes are preserved. No commands parsed inside.
+
+Bikeshedding:
+
+	Do we need non raw indented blocks? The only point to indent
+	is to avoid having to escape specific things.
+
+
+Semantics
+--------------------------------------------------------------------------------
+
+Standard HTML style elements, with a smattering of LaTeX, and ReStructuredText
 	
-	Alternative: Raw argument modifier, ala * or !
-	i.e  
-	!{{{ or maybe demlimit::::  
+	\code[python]{}, \h[1], \b, \i{...}, \pagebreak
+	\note, \footnote, \sidenote, \ref, \link,
+	\author, \title, \version, \list, \table, \raw
 
 
-Grammar-ish
+Implementation
+--------------------------------------------------------------------------------
 
-text :==
-
-command :== \ <command name> <arguments> (<block argument>? | <terminator>)
-command_name :== <valid characters>
-
-valid characters are unicode letters, numbers, and very few punctuation allowed.
-
-arguments :== <text argument> | <raw argument> | <list argument>
-
-text argument :== '{' text with commands '}'
-
-list argument :== '[' ((name =)? listitems,) ']'
-
-list_items :== list_argument | text argument | raw_argument | text with commands
-
-name :== text_argument | raw_argument | text (without commands ?)
 
 
 
