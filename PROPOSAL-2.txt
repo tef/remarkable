@@ -1,0 +1,123 @@
+Proposal
+--------------------------------------------------------------------------------
+
+Goals:
+
+	- Simple and short core grammar that is easy to remember, and to parse.
+ 	- Easy to generate epub, HTML, PDF from. 
+	- A set of built in commands for common markup
+	  within the core grammar. 
+	- Commands will not require exact indentation, trailing whitespace
+          or drawing ascii art.
+	- Allow embedding semistructured data, for command arguments, or meta
+	  data
+	
+Non Goals:
+	- ASCII-Art markup. It will exist, but as shorthand for existing 
+	  commands
+	- Turing Complete. 
+	  A larger attack surface, and makes it harder to process documents.
+	- Macros
+	  This is not a priority, but something that is being considered.
+
+Overview:
+
+	Double linebreaks mark paragraphs.
+	Single linebreaks are whitespace.
+	Commands begin with a \, take an optional amount of arguments
+	and terminate with ; or whitespac
+	Arguments can be [list] {text}, {{{ text }}}, and the final argument
+	can be an indented block, if the command ends with ::
+
+Syntax Rules:
+
+Rule 0: \ is the command/escape character. \\ is a literal \ 
+
+Rule 1: One line break is a space.
+	Two line breaks are the end of a paragraph.
+
+Rule 2: Commands begin with a \, have a name, arguments
+	and end with whitespace, or a semicolon.
+
+	i.e foo \bar baz
+	    foo \bar; baz
+	
+	Commands can have any number of arguments.
+
+Rule 3: Text Arguments
+	Text arguments are delimited by {}'s
+
+	e.g \foo{bar}{baz}
+
+	Commands can take multiple text arguments. 
+	Commands can also be inside text arguments. 
+
+Rule 4: Raw Text Arguments
+	Raw Text arguments are delimited by {{{ }}}
+	
+	e.g \foo{{{bar}}}
+
+	Commands can take multiple raw text arguments
+	Raw Text arguments cannot contain commands.
+	Backslashes have no meaning, newlines are preserved.
+
+Rule 5: List Arguments
+	A command can take a list as an argument
+	items are comma seperated. 
+
+	e.g \foo[1,2,3] \bar[1]
+	
+	Lists can contain other lists, and raw/text blocks
+
+	e.g \foo[[1],[2]], \bar[{1,2}]
+
+	Lists can have names attached
+	Names can be raw/text blocks
+
+	e.g. \foo[a=1, b=2], \bar[{foo}=1
+
+	There is no way to escape = or , except through a text block.
+	Trailing commas are allowed, and ignored.
+
+Considering;
+
+Rule 6: Indented text argument
+	If the last argument in a command is ::
+	The next consistently indented block of text,
+ 	including blank lines is used as a text argument
+
+	e.g:
+		\raw::
+			text block
+		text.
+
+	Note: It should be possible to have a raw indented block too
+	
+	Alternative: Raw argument modifier, ala * or !
+	i.e  
+	!{{{ or maybe demlimit::::  
+
+
+Grammar-ish
+
+text :==
+
+command :== \ <command name> <arguments> (<block argument>? | <terminator>)
+command_name :== <valid characters>
+
+valid characters are unicode letters, numbers, and very few punctuation allowed.
+
+arguments :== <text argument> | <raw argument> | <list argument>
+
+text argument :== '{' text with commands '}'
+
+list argument :== '[' ((name =)? listitems,) ']'
+
+list_items :== list_argument | text argument | raw_argument | text with commands
+
+name :== text_argument | raw_argument | text (without commands ?)
+
+
+
+
+

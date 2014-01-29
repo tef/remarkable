@@ -1,0 +1,201 @@
+Proposal
+--------------------------------------------------------------------------------
+
+Goals:
+
+	- Simple and short core grammar that is easy to remember, and to parse.
+ 	- Easy to generate epub, HTML, PDF from. 
+
+	- A Text File renders as a text file. I.e linebreaks work by default.
+	- Optionally, Commands take arguments, and/or a text block.
+	- Text blocks can be inline, multiline, or an indented block.
+	- Text blocks can have their contents marked as raw, and left unparsed.
+
+	- A set of built in commands for common markup
+	- ASCII-Art markup will exist, but as shorthand for existing commands
+	  within the core grammar. 
+	- Shorthand will not require exact indentation, trailing whitespace
+          or drawing ascii art.
+
+Non Goals:
+	- Turing Complete. 
+	  A larger attack surface, and makes it harder to process documents.
+	- Macros
+	  This is not a priority, but something that is being considered.
+
+Overview:
+
+	Double linebreaks mark paragraphs.
+	Commands are \arg[name][..] with an optional text block, either
+	- {text}
+	- {{{text}}}
+	- :: <indented block or blank lines>
+	To turn off intepretation of text argument, use a !, \cmd!{text}
+	Ascii-Art directives are shorthand for \cmd{...}
+
+Example of syntax: (No shorthand, command names may change)
+
+	\h[1]{Introduction}
+
+	I like markup, and I cannot lie. You other coders can't deny. 
+	When a document walks in oh god what am I doing with my life 
+	this is a waste.
+
+	\code![python]::
+		print("Hello, World")
+	
+		print("Still in the python block")
+
+	\list{
+	Why
+	Does
+	It
+	Hurt
+	}
+
+Syntax Rules:
+
+Rule 0: \ is the command/escape character. \\ is a literal \ 
+
+Rule 1: Two line breaks are the end of a paragraph.
+
+Rule 2: Markup directives without text: \name[args][args][...]
+	where args are optional, optionally followed by {} to end command.
+
+	These will be page elements which do not change surrounding text
+	I.e \pagebreak, \contents, or \u[65] for unicode escapes.
+
+	Or these commands will affect the entire document, i.e \author
+	To only affect specfic text, you need an inline or block command. 
+	
+Rule 3: Inline Markup: \name[args][...]{text}, \name[args]{{{text}}} 
+	where args are optional. 
+	
+	These commands should only apply to the text inside {}. There is
+	no LaTeX style \begin or \end. Text inside {}'s can span multiple
+	lines.
+
+	Optionally, {{{,}}} can be used instead. 
+
+Rule 4: Block Markup:  \name[args][...]:: followed by a
+        consistently indented block, ignoring blank lines.
+
+	i.e similar to how RST/GFM works.
+
+	Why ::? I'm copying it from ReStructuredText.
+
+Rule 5: Markup arguments have two forms: Positional and named
+
+	[foo] passes the arg "foo". [name=foo], is the named form.
+
+	We should declare a grammar for arguments. I imagine it will be
+	text, where \] can be used to insert a ]
+
+Rule 6: Raw blocks \name!{text}
+	The command name can be suffixed with a ! to tell the parser
+	to ignore any commands inside. 
+
+	\code![python]{{{print("Hello, world")}}}
+
+Rule 7: Shorthand will be defined interms of existing markup:
+
+	As to which ascii art gets included, i'm open to a mix of
+	RST and Markdown conventions. For example:
+
+	"#*n title"  for headers, i.e \header[n]{title}
+	*bold* for \bold{....}, similar for _foo..._
+
+	These should not include having to count whitespace,
+	using trailing whitespace, or precision ascii-art.
+
+	Escapes should work still, so \* won't be interpreted as bold.
+
+	Shorthand sets may be tied to directives, i.e \use[markdown, rst]
+
+
+
+Bikeshedding
+--------------------------------------------------------------------------------
+
+Grammar tweaks and notes:
+	
+	\foo followed by {not text} needs to be
+	 \foo\{not text} or \foo{}{not text}. 
+	 
+	Should the indent marker be '::' or otherwise.
+		:: is used by ReStructuredText.
+
+	Should the raw block character be !, i.e \foo!{....}
+
+	Should multiline, or raw  blocks be forced to use {{{, }}} instead
+	of {}, to avoid ambiguity?
+
+Command Names:
+
+	I imagine it will be a mixture of HTML, LaTeX and ReStructuredText
+	
+	Example:
+		\code[python]{}, \h[1], \b, \i{...}, \pagebreak
+		\note, \footnote, \sidenote, \ref, \link, 
+		\author, \title, \version, \list, \table, \raw
+
+Shorthand:
+
+	I imagine the shorthand it will be a mixture of Markdown and
+	ReStructuredText conventions.
+
+	*bold*, _italic_, `fixed`
+	# h1, ## h2, ### h3, and some shorthand for lists.
+
+	But I don't think [foo](link) will be kept in. it will be
+	\link[url]{text}.
+
+	One linebreak = a linebreak
+	Two linebreaks = a paragraph, ala GFM
+
+Directives:
+	
+	We may have directives to turn on/off features like
+	URLs into links, Smart Quotes,  
+
+Turing Complete:
+
+	The goal is to write a declarative markup, akin to HTML,
+	ReStructuredText, or markdown. Rather than a turing-complete
+	language like TeX, PDF or Postscript.
+
+	This is something that isn't a priority, but would only
+	be considered if other techniques fail.
+
+	Turing completeness is an attack surface. I do not
+	want it to be required to parse, or render the document.
+
+Macros/Substitutions:
+
+	We should be able to do RST style substitutions, for common 
+	phrases, like \replace[\foo]{Foo Corp Inc}, but this doesn't
+	require turing completeness.
+
+	Ideally, we should be able to define the ascii art shorthand
+	in a prelude, rather than baking it in to the parser. This
+	would allow users to switch between RST and Markdown flavours
+	using directives
+
+	\shorthand[line][pattern]{replacement}
+	\shorthand[inline][pattern]{replacement}
+
+	I.e we can define limited substitutions based around common
+	markup patterns: *word*, -lists
+
+	However, I do not think regular expressions would be a pleasant
+	way to write, test, or debug markup. We should learn the lessons
+	of WikiText and Markdown.
+
+	The goal is to be able to have the ascii-art shorthand
+	without baking it into the grammar.
+	
+	Templating is closely related too.
+
+Linebreaks:
+	manual linebreaking is awful, but automatic ones aren't great either
+	welp
