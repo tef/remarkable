@@ -101,27 +101,51 @@ Rule 6: Raw indented text argument
 
 	Newlines, backslashes are preserved. No commands parsed inside.
 
-Bikeshedding:
-
-	Do we need non raw indented blocks? The only point to indent
-	is to avoid having to escape specific things.
-
 
 Semantics
 --------------------------------------------------------------------------------
 
-Standard HTML style elements, with a smattering of LaTeX, and ReStructuredText
+Standard HTML document elements, with a smattering of LaTeX, 
+and ReStructuredText
+
+Something like:
 	
 	\code[python]{}, \h[1], \b, \i{...}, \pagebreak
 	\note, \footnote, \sidenote, \ref, \link,
-	\author, \title, \version, \list, \table, \raw
+	\author, \title, \version, \list, \table,
+	\metdata[author=...,title=....]
 
+Should be able to make books, chapters, citations, bibliographies, title pages,
+rfc style things etc.
 
 Implementation
 --------------------------------------------------------------------------------
 
+Nanopass, Pipeline style:
+
+	Reader ---> Filters* ---> Writer
+
+Implement document includes, table of content writing, ascii shorthand as
+filters from ast to ast.
+
+AST will involve lines, linebreaks, and other things which will eventually
+be stripped out. 
+
+Pipe fittings, or filter wrappers
+
+Some filters won't work on all of the ast, perhaps a subset, i.e lines
+(for ascii expansion) without commands, and others might work on specific
+command.
+
+\filter[type=line]{command line}
 
 
 
+Bikeshedding:
+--------------------------------------------------------------------------------
+building static/all in one website, seperate chapters, etc.
+Or handling a directory in bulk
 
+	Do we need non raw indented blocks? The only point to indent
+	is to avoid having to escape specific things.
 
