@@ -57,6 +57,7 @@ Rule 3: Text Arguments
 
 	Commands can take multiple text arguments. 
 	Commands can also be inside text arguments. 
+	nb: {{{{ is parsed as {{{ {, {{ as { {
 
 Rule 4: Raw Text Arguments
 	If the first character is a !, the text 
@@ -67,6 +68,7 @@ Rule 4: Raw Text Arguments
 	Commands can take multiple raw text arguments
 	Raw Text arguments cannot contain commands.
 	Newlines are preserved. Backslashes are preserved.
+	}/}}} cannot be escaped.
 
 Rule 5: List Arguments
 	A command can take a list as an argument
@@ -87,7 +89,7 @@ Rule 5: List Arguments
 	Trailing commas are allowed, and ignored.
 
 
-Rule 6: Raw indented text argument
+Rule 6: Raw text argument
 	If a command has :: at the end, the next consistently
 	indented block of text, is used as a raw text argument
 
@@ -113,7 +115,7 @@ Something like:
 	\code[python]{}, \h[1], \b, \i{...}, \pagebreak
 	\note, \footnote, \sidenote, \ref, \link,
 	\author, \title, \version, \list, \table,
-	\metdata[author=...,title=....]
+	\metadata[author=...,title=....]
 
 Should be able to make books, chapters, citations, bibliographies, title pages,
 rfc style things etc.
@@ -146,6 +148,11 @@ Bikeshedding:
 building static/all in one website, seperate chapters, etc.
 Or handling a directory in bulk
 
-	Do we need non raw indented blocks? The only point to indent
-	is to avoid having to escape specific things.
+Do we need non raw indented blocks? The only point to indent
+is to avoid having to escape specific things.
+
+Escaping in raw blocks, should backslashes be preserved? Look to python's
+raw strings. python uses \" means escape the " but keep the \ too. Weird.
+
+To define: CRLF behaviour. Namespaces, Unicode control chars, normalization
 
