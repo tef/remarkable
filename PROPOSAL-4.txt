@@ -6,7 +6,7 @@
 A markup language to produce PDF, HTML, EPUB documents
 --------------------------------------------------------------------------------
 
-
+Check the README file for an exploration of other formats and design choices.
 
 Design Goals:
 
