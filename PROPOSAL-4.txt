@@ -55,7 +55,7 @@ Rule 2: Commands begin with a \ have a name, arguments
 		\pagebreak;
 
 Rule 3: Text Arguments
-	Text arguments are delimited by {}'s 
+	Text arguments are delimited by {}'s
 	Commands can take multiple text arguments. 
 	Commands can also be inside text arguments. 
 
@@ -63,8 +63,8 @@ Rule 3: Text Arguments
 	    \section{\h1{blah}}
 
 
-	You can use any matching number of {}'s, i.e
-	the following argument is "a thing". 
+	You can use {{{, }}} too to break text
+	over muliple lines.
 
 	    \lol{{{a thing}}}
 
@@ -105,16 +105,22 @@ Rule 5: List Arguments
 	Trailing commas are allowed, and ignored.
 
 Rule 6: Block arguments
-	If a command has : at the end, the next consistently
-	indented block of text, is used as a text argument
+	If a line is just a command with : at the end, 
+	the consistently indented block of text is an argument.
 
 	e.g:	
-		\cmd!
+		\cmd!			\cmd{hello
+					}
 			hello
+
 		blah
+	
 
 	Indentation must be consistent, blank lines are skipped
 	when checking indentation levels.
+
+	Commands must be the only thing on the line above the 
+	indented block, and a blank line below, too.
 
 Rule 7: Raw block argument
 	If a command has ! at the end, the next consistently
@@ -123,6 +129,7 @@ Rule 7: Raw block argument
 	e.g:
 		\cmd!
 			text block
+
 		text.
 
 	Indentation must be consistent, blank lines are skipped
@@ -166,6 +173,20 @@ Changelog:
 
 - Made unicode choices
 - Use !, !!, etc for raw text blocks. Allows escaping without subsitutions
-- Similarly did the same for {}'s instead of just { and {{{ pairs.
 - Added back indented blocks for non raw text.
+- Allowed _ and . in names.
+- Line contiuations
 
+Proposal 2/3:
+- Fleshing out semantics of names and arguments.
+
+Proposal 1:
+- Functions take any variety of text and list args, but only
+  raw blocks can be indented.
+- Linebreaks are ignored.
+
+Proposal 0:
+
+- Added {{{}}} , raw blocks through function name suffix \foo!
+- Functions take multiple args and text block, optionally indented.
+- Args can be named, linebreaks are literal
