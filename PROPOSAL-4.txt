@@ -80,12 +80,10 @@ Rule 4: Raw Text Arguments
 
 	Commands can take multiple raw text arguments
 	Raw Text arguments cannot contain commands.
-	Newlines are preserved. Backslashes are preserved.
+	In {{{! .... !}}}, newlines are preserved. 
+	Backslashes are preserved.
 
-	Similarly to {}'s, you can also use multiple !'s
-	i.e  {! bar !} {!! bar !!}, etc.
-	The number of {'s and !'s only have to match
-	 each other
+	You can use !!, !!!, etc as raw delimiters, too.
 
 Rule 5: List Arguments
 	A command can take a list as an argument
@@ -109,8 +107,8 @@ Rule 6: Block arguments
 	the consistently indented block of text is an argument.
 
 	e.g:	
-		\cmd!			\cmd{hello
-					}
+		\cmd!			\cmd{{{hello
+					}}}
 			hello
 
 		blah
