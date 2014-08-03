@@ -37,6 +37,7 @@ Rule 1: One line break is a space.
 	Two line breaks are the end of a paragraph.
 
 	Use \ at the end of a line to force a continuation.
+	There may be whitespace between the \ and the end of line.
 
 Rule 2: Commands begin with a \ have a name, arguments
 	and end with whitespace, or a semicolon.
@@ -84,6 +85,7 @@ Rule 4: Raw Text Arguments
 	Backslashes are preserved.
 
 	You can use !!, !!!, etc as raw delimiters, too.
+	i.e \foo{!!! this is raw!! !!!}
 
 Rule 5: List Arguments
 	A command can take a list as an argument
