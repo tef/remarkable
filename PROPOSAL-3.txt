@@ -3,25 +3,27 @@
 
 	-- John MacFarlane, author of Pandoc
 
-A markup language to produce PDF, HTML, EPUB documents
+Proposal
 --------------------------------------------------------------------------------
 
-
-
-Design Goals:
+A markup language to produce PDF, HTML, EPUB documents
 
 - TeX like syntax, but vastly simpler parsing rules, and escaping.
 - HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
-- No Ascii Art for formatting semantics. All commands follow same form
+
+Design Goals:
+
+- No Ascii Art. All commands follow same form
 - Commands can take arguments, including text and lists of items.
 - Commands can be used to describe formatting, structure, and metadata.
-- Commands may not require exact indentation, trailing whitespace
+- Commands will not require exact indentation, trailing whitespace
   or drawing ascii art.
-- However, some commands may take an indented block.
+- Extending the language can be done through filters, programs that
+  read and produce an abstract syntax tree.
 	
 Non Goals:
 
-- Markdown esque shorthand. Will not be defined in the core language, but can be 
+- Shorthand will not be defined in the core language, but can be 
   added by filters.
 
 - Programmable. The Language will be declarative, without macros.
@@ -31,12 +33,10 @@ Syntax
 --------------------------------------------------------------------------------
 
 Rule 0: \ is the command/escape character.
-	 \\ is a literal \, simarly for \, \{ \} \[ \] \! \: \; \=
+	 \\ is a literal \, simarly for \, \{ \} \[ \] \! \: \; 
 
 Rule 1: One line break is a space.
 	Two line breaks are the end of a paragraph.
-
-	Use \ at the end of a line to force a continuation.
 
 Rule 2: Commands begin with a \ have a name, arguments
 	and end with whitespace, or a semicolon.
@@ -46,46 +46,29 @@ Rule 2: Commands begin with a \ have a name, arguments
 	
 	Commands can have any number of arguments.
 	Command names must not contain whitespace, or control characters
-	Names may contain _ and . but not other  puncutation marks
-	like  : \ { } [ ] ! : ;
-
-	i.e
-		
-		\h1{....} \section[1]{....}
-		\pagebreak;
+	Names must not contain the puncutation marks : \ { } [ ] ! : ;
 
 Rule 3: Text Arguments
-	Text arguments are delimited by {}'s 
-	Commands can take multiple text arguments. 
-	Commands can also be inside text arguments. 
+	Text arguments are delimited by {}'s, or {{{,}}}
 
 	e.g \foo{bar}{baz}
+	    \lol{{{a thing}}}
 	    \section{\h1{blah}}
 
-
-	You can use any matching number of {}'s, i.e
-	the following argument is "a thing". 
-
-	    \lol{{{a thing}}}
-
-	When you use  {{{ ... }}} you do not need to
-	escape solitary }'s or }}'s inside.
+	Commands can take multiple text arguments. 
+	Commands can also be inside text arguments. 
+	nb: {{{{ is parsed as {{{ {, {{ as { {
 
 Rule 4: Raw Text Arguments
-	Inside raw text blocks, the \ has no special meaning.
-	Use ! to mark text blocks as raw. So \ }, etc appear
-	 as if escaped.
+	If the first character is a !, the text 
+	inside is treated as a raw string.
 	
-	e.g \foo{!{foo}!} is "{foo}", \foo{!bar\!!} is "bar\!"
+	e.g \foo{{{!bar}}}, \foo{!bar}
 
 	Commands can take multiple raw text arguments
 	Raw Text arguments cannot contain commands.
 	Newlines are preserved. Backslashes are preserved.
-
-	Similarly to {}'s, you can also use multiple !'s
-	i.e  {! bar !} {!! bar !!}, etc.
-	The number of {'s and !'s only have to match
-	 each other
+	}/}}} cannot be escaped.
 
 Rule 5: List Arguments
 	A command can take a list as an argument
@@ -102,26 +85,16 @@ Rule 5: List Arguments
 	
 	e.g \foo[a=1, b=2]
 	
+	There is no way to escape = or , except through a text block.
 	Trailing commas are allowed, and ignored.
 
-Rule 6: Block arguments
-	If a command has : at the end, the next consistently
-	indented block of text, is used as a text argument
 
-	e.g:	
-		\cmd!
-			hello
-		blah
-
-	Indentation must be consistent, blank lines are skipped
-	when checking indentation levels.
-
-Rule 7: Raw block argument
-	If a command has ! at the end, the next consistently
+Rule 6: Raw text argument
+	If a command has :: at the end, the next consistently
 	indented block of text, is used as a raw text argument
 
 	e.g:
-		\cmd!
+		\raw::
 			text block
 		text.
 
@@ -130,13 +103,7 @@ Rule 7: Raw block argument
 
 	Newlines, backslashes are preserved. No commands parsed inside.
 
-Rule 8: Unicode
 
-	Commands are NFC normalized.
-	BOMs are ignored at beginning.
-	Input should be utf-8, without surrogate pair characters.
-	Unicode whitespace/para characters should be respected.
-	
 Semantics
 --------------------------------------------------------------------------------
 
@@ -153,19 +120,53 @@ Something like:
 Should be able to make books, chapters, citations, bibliographies, title pages,
 rfc style things etc.
 
+Implementation
+--------------------------------------------------------------------------------
+
+Nanopass, Pipeline style:
+
+	Reader ---> Filters* ---> Writer
+
+Implement document includes, table of content writing, ascii shorthand as
+filters from ast to ast.
+
+AST will involve lines, linebreaks, and other things which will eventually
+be stripped out. 
+
+Pipe fittings, or filter wrappers
+
+Some filters won't work on all of the ast, perhaps a subset, i.e lines
+(for ascii expansion) without commands, and others might work on specific
+command.
+
+\filter[type=line]{command line}
+
+
 
 Bikeshedding:
 --------------------------------------------------------------------------------
-
-using :: or !! to make them stand out more.
-
 building static/all in one website, seperate chapters, etc.
 Or handling a directory in bulk
 
-Changelog:
+Do we need non raw indented blocks? The only point to indent
+is to avoid having to escape specific things.
 
-- Made unicode choices
-- Use !, !!, etc for raw text blocks. Allows escaping without subsitutions
-- Similarly did the same for {}'s instead of just { and {{{ pairs.
-- Added back indented blocks for non raw text.
+Escaping in raw blocks, should backslashes be preserved? Look to python's
+raw strings. python uses \" means escape the " but keep the \ too. Weird.
+
+Feedback from MononcQc:
+
+	To define: 
+		CRLF behaviour.
+		Namespaces,
+		Unicode control chars (para, linebreak),
+		Unicode normalization of command names
+
+
+Feedback from tommorris:
+
+	Should be able to produce diff'd output of two revisions
+	(thus need \add \remove style directives)
+
+	BiBTeX compatability is a huge win.
 
