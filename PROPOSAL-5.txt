@@ -1,0 +1,251 @@
+"I also dream about a modern replacement for LaTeX designed from the ground up
+ to target multiple output formats (at least PDF, HTML, EPUB)"
+
+	-- John MacFarlane, author of Pandoc
+
+A markup language to produce PDF, HTML, EPUB documents
+--------------------------------------------------------------------------------
+
+I want LaTeX without TeX. ReStructuredText without ascii-art markup.
+Check the README file for an exploration of other formats and design choices.
+
+Design Goals:
+
+- TeX like syntax, but vastly simpler parsing rules, and escaping.
+- HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
+- No Ascii Art for formatting semantics. All commands follow same form
+- Commands can take arguments, including text and lists of items.
+- Commands can be used to describe formatting, structure, and metadata.
+- Commands may not require exact indentation, trailing whitespace
+  or drawing ascii art.
+- However, some commands may take an indented block.
+	
+Non Goals:
+
+- Markdown esque shorthand. Will not be defined in the core language, but can be 
+  added by filters.
+
+- Programmable. The Language will be declarative, without macros.
+  Can be added by filters.
+
+Syntax
+--------------------------------------------------------------------------------
+
+Rule 1: Spaces and Linebreaks
+
+	Multiple spaces are treated as one space, e.g.
+
+ 		Foo    Bar  	is:	Foo Bar
+
+	Two line breaks mark the end of a paragraph, e.g
+
+        	Hello           is:     Hello
+                                
+                Thing                   Thing
+
+        One line break will be treated as a space between
+	lines, including trailing/leading whitespace e.g:
+
+	 	This		is: 	This Thing
+		Thing
+                			Over Here
+		Over                      
+               		Here                  
+
+	Use \ at the end of a line to ignore the line break,
+	without inserting a space.
+
+        e.g     This\           is:     ThisThing
+                Thing
+
+	A \ at the end of the file is not an error, but will 
+	have no effect.
+	
+	There can be trailing whitespace between \ and the 
+        end of line or file.
+
+
+Rule 2: \ is the command character.
+
+	Commands begin with a \ have a name, arguments,
+	and end when there is no more arguments, or a semicolon.
+
+	e.g \bar
+	    hello \foo[name=1]
+            \baz[1]{hello}{world!}
+	    foo\bar{args}[1,2]baz
+            Hello \foo;there
+
+	Names may contain numbers, letters, underscores (_) and periods (.)
+	but must not  whitespace, control characters, or puncutation
+	marks like  : \ { } [ ] ! : ; 
+
+        A semicolon (;) marks the end of a command, and is not treated 
+        like text, so \foo[1]bar and \foo[1];bar are equivilent.
+
+        There are commands for document structure as well as
+        special characters too.
+		
+
+Rule 3: \ is the escape character
+
+	\\ is a literal \, and  \, \{ \} \[ \] \! \: \; \= produce literals.
+
+
+Rule 4: Text Arguments
+
+	Text arguments are delimited by matching {}'s
+
+	e.g \foo{bar}{baz}
+	    \section{\h1{blah}}
+	
+	These cannot span multiple lines, but other commands can be nested
+        inside.
+
+
+Rule 5: Multiline Text Arguments
+
+	You can use {{{, }}} too to break text
+	over muliple lines.
+
+	    \lol{{{
+            a thing
+            that is lol
+            }}}
+
+	Note: When you use  {{{ ... }}} you do not need to
+	escape solitary }'s or }}'s inside.
+
+
+Rule 6: Collection arguments
+
+	Commands can take a nested collection of text items
+	seperated by commas: \foo[1,2,3] 
+
+	Items can optionally be named, these names follow
+	the same rules of commands, i.e \foo[a=1,b=2,c=foo]
+	Unnamed items must preceed named items in lists.
+
+	Items can be text, so commands can appear inside
+	lists, \foo[a=\b{foo}, b=lol]
+
+	= and , can be escaped like \= or \, or
+	inside nested arguments like \foo[\bar{1,2}]
+
+	Items can also be collections too, e.g:
+		\foo[a=[1,2,3]]
+
+
+Rule 7: Raw Text Arguments
+
+	Use matching numbers of !'s to mark text blocks 
+	as raw, so \ }  appear as literals.
+	
+	e.g 	\foo{!{foo}!}	is	{foo}
+		\foo{!bar\!!}	is	bar\!
+		\foo{!!Hi!Ho!!} is	Hi!Ho
+
+	{!... !} cannot have newlines but {{{! .... !}}} can
+
+	Commands can take multiple raw text arguments
+	Raw Text arguments cannot contain commands, or nest.
+
+	Whitespace in raw text arguments is preserved.
+
+
+Rule 8: Indented Block text arguments
+	A command ending in : can be passed an indented text block
+	as an argument.
+
+	e.g:	
+		\cmd:			\cmd{{{hello
+			hello		}}}
+		blah
+	
+
+	Any text indented more than the line of the original command
+	is considered to be part of the block.
+
+	The minimum indentation of all the captured lines
+	will be removed and must be either all tabs, or all spaces.
+
+	If there is no consistent prefix for the block it will be 
+	treated as an error.
+
+	Blank or whitespace only lines will be treated
+	as part of the block.
+
+	Block text arguments can be nested. 
+	Blocks cannot be used within single line text arguments.
+
+
+Rule 9: Indented Raw text block argument
+	If a command has ! at the end, the next consistently
+	indented block of text is used as a raw text argument
+
+	e.g:
+		\cmd!
+			text block
+
+		text.
+
+	Like raw text, newlines and backslashes are reserved,
+	like blocks, minimum indentation is skipped, but raw
+	blocks cannot be nested. 
+	
+
+Rule 10: Text Encoding 
+
+	Command names are NFC normalized.
+	BOMs are ignored at beginning.
+	Input should be utf-8, without surrogate pair characters.
+	Unicode whitespace/para characters should be respected.
+
+
+	
+Semantics
+--------------------------------------------------------------------------------
+
+Standard HTML document elements, with a smattering of LaTeX, 
+and ReStructuredText
+
+Something like:
+	
+	\code[python]{}, \h[1], \b, \i{...}, \pagebreak
+	\note, \footnote, \sidenote, \ref, \link,
+	\author, \title, \version, \list, \table,
+	\metadata[author=...,title=....], \q{....}
+
+Should be able to make books, chapters, citations, bibliographies, title pages,
+rfc style things etc.
+
+As well as character escapes \u{NNNN...}, \em, \en.
+
+Changelog:
+--------------------------------------------------------------------------------
+
+- Nailing down line continuations, reordering rules. Fixing
+  indentation semantics, whitespace handling.
+- Cleaning up most of the spec.
+
+- Proposal 4
+
+- Made unicode choices
+- Use !, !!, etc for raw text blocks. Allows escaping without subsitutions
+- Added back indented blocks for non raw text.
+- Allowed _ and . in names.
+- Line contiuations
+
+Proposal 2/3:
+- Fleshing out semantics of names and arguments.
+
+Proposal 1:
+- Functions take any variety of text and list args, but only
+  raw blocks can be indented.
+- Linebreaks are ignored.
+
+Proposal 0:
+
+- Added {{{}}} , raw blocks through function name suffix \foo!
+- Functions take multiple args and text block, optionally indented.
+- Args can be named, linebreaks are literal
