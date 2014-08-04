@@ -135,6 +135,9 @@ Rule 6: Collection arguments
 	Items can also be collections too, e.g:
 		\foo[a=[1,2,3]]
 
+	There can be whitespace around the , or =
+	and it will be ignored.
+
 
 Rule 7: Raw Text Arguments
 
