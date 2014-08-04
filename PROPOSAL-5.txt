@@ -6,7 +6,9 @@
 A markup language to produce PDF, HTML, EPUB documents
 --------------------------------------------------------------------------------
 
-I want LaTeX without TeX. ReStructuredText without ascii-art markup.
+I want LaTeX without TeX. ReStructuredText without being totally ad-hoc
+to parse like tex, ascii-art driven like rst, or clumsy to escape in like html.
+
 Check the README file for an exploration of other formats and design choices.
 
 Design Goals:
@@ -64,21 +66,31 @@ Rule 1: Spaces and Linebreaks
 	There can be trailing whitespace between \ and the 
         end of line or file.
 
+Rule 2: \ is the escape character
 
-Rule 2: \ is the command character.
+	\\ is a literal \, and  \, \{ \} \[ \] \! \: \; \= produce literals.
 
-	Commands begin with a \ have a name, arguments,
-	and end when there is no more arguments, or a semicolon.
+Rule 3: \ is also the command character.
+
+	Commands begin with a \ have a name, have a number of
+	arguments,and end when there is no more arguments, 
+	or a semicolon.
 
 	e.g \bar
-	    hello \foo[name=1]
-            \baz[1]{hello}{world!}
-	    foo\bar{args}[1,2]baz
-            Hello \foo;there
+	    hi \b{there} 		A text arg
+	    hello \foo[name=1, a=2]	A collection arg
+            \baz[1]{hello}{world!}	A mixture
+	    foo\bar[1,2]baz	
+            Hello \foo;there	
 
-	Names may contain numbers, letters, underscores (_) and periods (.)
-	but must not  whitespace, control characters, or puncutation
-	marks like  : \ { } [ ] ! : ; 
+	Commands can take collections, then text arguments. Usually 
+	text inside [ .. ] is the text about how to format it, and
+	text inside { .. } is the text to be formatted. These
+	are covered in later rules.
+
+	Command names may contain numbers, letters, underscores (_) and
+	periods (.) but must not  whitespace, control characters, or
+	puncutation marks like  : \ { } [ ] ! : ; 
 
         A semicolon (;) marks the end of a command, and is not treated 
         like text, so \foo[1]bar and \foo[1];bar are equivilent.
@@ -86,11 +98,6 @@ Rule 2: \ is the command character.
         There are commands for document structure as well as
         special characters too.
 		
-
-Rule 3: \ is the escape character
-
-	\\ is a literal \, and  \, \{ \} \[ \] \! \: \; \= produce literals.
-
 
 Rule 4: Text Arguments
 
