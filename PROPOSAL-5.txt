@@ -13,15 +13,13 @@ Check the README file for an exploration of other formats and design choices.
 
 Design Goals:
 
-- TeX like syntax, but vastly simpler parsing rules, and escaping.
+- TeX like syntax, but vastly simpler parsing rules.
 - HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
 - No Ascii Art for formatting semantics. All commands follow same form
-- Commands can take arguments, including text and lists of items.
-- Commands can be used to describe formatting, structure, and metadata.
-- Commands may not require exact indentation, trailing whitespace
-  or drawing ascii art.
+- It should be trivial to include any text without escaping
+- Invisible whitespace should have no effect, for ex: trailing whitespace 
 - However, some commands may take an indented block.
-	
+
 Non Goals:
 
 - Markdown esque shorthand. Will not be defined in the core language, but can be 
@@ -66,22 +64,18 @@ Rule 1: Spaces and Linebreaks
 	There can be trailing whitespace between \ and the 
         end of line or file.
 
-Rule 2: \ is the escape character
-
-	\\ is a literal \, and  \, \{ \} \[ \] \! \: \; \= produce literals.
-
-Rule 3: \ is also the command character.
+Rule 1: \ is the command character.
 
 	Commands begin with a \ have a name, have a number of
 	arguments,and end when there is no more arguments, 
 	or a semicolon.
 
-	e.g \bar
+	e.g \bar			No args
 	    hi \b{there} 		A text arg
 	    hello \foo[name=1, a=2]	A collection arg
             \baz[1]{hello}{world!}	A mixture
-	    foo\bar[1,2]baz	
-            Hello \foo;there	
+	    foo\bar[1,2]baz		No ;
+            Hello \foo;there		Ended with ;
 
 	Commands can take collections, then text arguments. Usually 
 	text inside [ .. ] is the text about how to format it, and
@@ -89,17 +83,22 @@ Rule 3: \ is also the command character.
 	are covered in later rules.
 
 	Command names may contain numbers, letters, underscores (_) and
-	periods (.) but must not  whitespace, control characters, or
-	puncutation marks like  : \ { } [ ] ! : ; 
+	periods (.) but must not whitespace, control characters, or
+	puncutation marks, especially ones used by the markup : \ { } [ ] ! : ; 
+
+	Command names may include unicode numbers, letters.
 
         A semicolon (;) marks the end of a command, and is not treated 
         like text, so \foo[1]bar and \foo[1];bar are equivilent.
 
         There are commands for document structure as well as
         special characters too.
-		
 
-Rule 4: Text Arguments
+Rule 3: \ is the escape character
+
+	\\ is a literal \, and  \, \{ \} \[ \] \! \: \; \= produce literals.
+
+Rule 4: Inline Text Arguments
 
 	Text arguments are delimited by matching {}'s
 
@@ -123,7 +122,12 @@ Rule 5: Multiline Text Arguments
 	Note: When you use  {{{ ... }}} you do not need to
 	escape solitary }'s or }}'s inside.
 
+	Rationale: It's a lot easier to trace missing bracket errors
+	when you have to explicitly make it multiline.
 
+	
+	FIXME: Blank lines/indentation in multiline braces.
+	
 Rule 6: Collection arguments
 
 	Commands can take a nested collection of text items
@@ -140,7 +144,7 @@ Rule 6: Collection arguments
 	inside nested arguments like \foo[\bar{1,2}]
 
 	Items can also be collections too, e.g:
-		\foo[a=[1,2,3]]
+		\foo[a=[1,2,3,foo, bar]]
 
 	There can be whitespace around the , or =
 	and it will be ignored.
@@ -148,7 +152,7 @@ Rule 6: Collection arguments
 
 Rule 7: Raw Text Arguments
 
-	Use matching numbers of !'s to mark text blocks 
+	Use matching numbers of !'s to mark text arguments
 	as raw, so \ }  appear as literals.
 	
 	e.g 	\foo{!{foo}!}	is	{foo}
@@ -176,8 +180,13 @@ Rule 8: Indented Block text arguments
 	Any text indented more than the line of the original command
 	is considered to be part of the block.
 
-	The minimum indentation of all the captured lines
-	will be removed and must be either all tabs, or all spaces.
+	The indented block continues until a line starts with less
+	or equal indentation to the line with the command, and then
+	the minimum whitespace prefix is removed from the block.
+
+	The indent may be tabs or spaces, however they are not
+	comparable. The minimum prefix is the set of whitespace
+	shared by all non blank indented lines in the block. 
 
 	If there is no consistent prefix for the block it will be 
 	treated as an error.
@@ -210,7 +219,6 @@ Rule 10: Text Encoding
 	BOMs are ignored at beginning.
 	Input should be utf-8, without surrogate pair characters.
 	Unicode whitespace/para characters should be respected.
-
 
 	
 Semantics
