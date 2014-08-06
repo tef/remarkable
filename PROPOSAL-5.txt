@@ -13,12 +13,13 @@ Check the README file for an exploration of other formats and design choices.
 
 Design Goals:
 
-- TeX like syntax, but vastly simpler parsing rules.
-- HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
 - No Ascii Art for formatting semantics. All commands follow same form
 - It should be trivial to include any text without escaping
 - Invisible whitespace should have no effect, for ex: trailing whitespace 
 - However, some commands may take an indented block.
+
+- TeX like syntax, but vastly simpler parsing rules.
+- HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
 
 Non Goals:
 
@@ -31,7 +32,37 @@ Non Goals:
 Syntax
 --------------------------------------------------------------------------------
 
-Rule 1: Spaces and Linebreaks
+Rule 1: \ is the command character.
+
+	Commands begin with a \ have a name, have a number of
+	arguments,and end when there is no more arguments, 
+	or a semicolon.
+
+	e.g \bar			No args
+	    hi \b{there} 		A text arg
+	    hello \foo[name=1, a=2]	A collection arg
+            \baz[1]{hello}{world!}	A mixture
+	    foo\bar[1,2]baz		No ;
+            Hello \foo;there		Ended with ;
+
+	Commands can take collections, then text arguments. Usually 
+	text inside [ .. ] is the text about how to format it, and
+	text inside { .. } is the text to be formatted. These
+	are covered in later rules.
+
+	Command names may contain numbers, letters, underscores (_) and
+	periods (.) but must not whitespace, control characters, or
+	puncutation marks, especially ones used by the markup : \ { } [ ] ! : ; 
+
+	Command names may include unicode numbers, letters.
+
+        A semicolon (;) marks the end of a command, and is not treated 
+        like text, so \foo[1]bar and \foo[1];bar are equivilent.
+
+        There are commands for document structure as well as
+        special characters too.
+
+Rule 2: Spaces and Linebreaks
 
 	Multiple spaces are treated as one space, e.g.
 
@@ -64,37 +95,7 @@ Rule 1: Spaces and Linebreaks
 	There can be trailing whitespace between \ and the 
         end of line or file.
 
-Rule 1: \ is the command character.
-
-	Commands begin with a \ have a name, have a number of
-	arguments,and end when there is no more arguments, 
-	or a semicolon.
-
-	e.g \bar			No args
-	    hi \b{there} 		A text arg
-	    hello \foo[name=1, a=2]	A collection arg
-            \baz[1]{hello}{world!}	A mixture
-	    foo\bar[1,2]baz		No ;
-            Hello \foo;there		Ended with ;
-
-	Commands can take collections, then text arguments. Usually 
-	text inside [ .. ] is the text about how to format it, and
-	text inside { .. } is the text to be formatted. These
-	are covered in later rules.
-
-	Command names may contain numbers, letters, underscores (_) and
-	periods (.) but must not whitespace, control characters, or
-	puncutation marks, especially ones used by the markup : \ { } [ ] ! : ; 
-
-	Command names may include unicode numbers, letters.
-
-        A semicolon (;) marks the end of a command, and is not treated 
-        like text, so \foo[1]bar and \foo[1];bar are equivilent.
-
-        There are commands for document structure as well as
-        special characters too.
-
-Rule 3: \ is the escape character
+Rule 3: \ can be used to escape special characters in commands.
 
 	\\ is a literal \, and  \, \{ \} \[ \] \! \: \; \= produce literals.
 
@@ -239,12 +240,30 @@ rfc style things etc.
 
 As well as character escapes \u{NNNN...}, \em, \en.
 
-Changelog:
+Issues
 --------------------------------------------------------------------------------
+
+- Can \ only escape specific glyphs? 
+	It's really for 'special characters' inside commands/arguments
+
+- Tabs and spaces.
+	Does the minimum shared indent make sense?
+
+- Unicode in command names ? Currently implementation designed.
+
+- {!!}, {!!!!} etc
+	how should these be parsed. 
+
+- Clarify whitespace in raw blocks
+
+Changelog
+--------------------------------------------------------------------------------
+
 
 - Nailing down line continuations, reordering rules. Fixing
   indentation semantics, whitespace handling.
-- Cleaning up most of the spec.
+- Cleaning up most of the spec. ; *are* optional, bare commands are good too
+- Explained justification of {}/{{{}}}
 
 - Proposal 4
 
