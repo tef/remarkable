@@ -58,6 +58,8 @@ Rule 1: \ is the command character.
 
         A semicolon (;) marks the end of a command, and is not treated 
         like text, so \foo[1]bar and \foo[1];bar are equivilent.
+        
+        \DMO{ is \foo[1]; command foo or command foo followed by ;? What is behavior of ; outside command invocation?}
 
         There are commands for document structure as well as
         special characters too.
@@ -88,6 +90,8 @@ Rule 2: Spaces and Linebreaks
 
         e.g     This\           is:     ThisThing
                 Thing
+                
+        
 
 	A \ at the end of the file is not an error, but will 
 	have no effect.
@@ -108,7 +112,19 @@ Rule 4: Inline Text Arguments
 	
 	These cannot span multiple lines, but other commands can be nested
         inside.
-
+        
+        \DMO{{{what are the semantics of command within commands? What is the application order of commands?
+        I would lean towards commands taking an AST. This way you can make extension commands like so:
+        \list{
+        	\bullet{something}
+        	\bullet{something else}
+        }
+        Without having to define \bullet on the top level.
+        
+        You can get around the problem of having extension writers have to lower AST by iteratively applying the top
+        level command. but this introduces unbounded parse time in the case where extension writers add more AST elems
+        than they remove.
+        }}}
 
 Rule 5: Multiline Text Arguments
 
@@ -119,15 +135,19 @@ Rule 5: Multiline Text Arguments
             a thing
             that is lol
             }}}
+       	\DMO{ is ^}}}$ needed for closure of ML block or can it terminate the block in other positions?}
 
 	Note: When you use  {{{ ... }}} you do not need to
 	escape solitary }'s or }}'s inside.
+	\DMO{Tabs on the beginning of line within multiline blocks?}
 
 	Rationale: It's a lot easier to trace missing bracket errors
 	when you have to explicitly make it multiline.
 
 	
 	FIXME: Blank lines/indentation in multiline braces.
+	
+	\DMO{nvm, can't read :) }
 	
 Rule 6: Collection arguments
 
@@ -161,6 +181,11 @@ Rule 7: Raw Text Arguments
 		\foo{!!Hi!Ho!!} is	Hi!Ho
 
 	{!... !} cannot have newlines but {{{! .... !}}} can
+	
+	\DMO{{{
+	Thinking about the AST lowering. Maybe it makes this feature is not needed,
+	since rawness is often associated with command. E.G. \code[c]{int c_code_here()}
+	}}}
 
 	Commands can take multiple raw text arguments
 	Raw Text arguments cannot contain commands, or nest.
