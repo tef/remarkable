@@ -84,7 +84,7 @@ Rule 1: \ is the substituiton character.
 
 	A command with no name just lifts the arguments into the
 	document, i.e \[1,2] is a list, \{ } is a text subelement,
-	\!{ is a raw element} 
+	\{! is a raw element!} 
 
 	A \ at the end of a line ignores the trailing whitespace
 	until the first word of the next line.
@@ -112,11 +112,8 @@ Rule 2: Text
 	when you have to explicitly make it multiline.
 	
 Rule 3: Raw Text 
-	\!{ ... }, and \!{{{ ... }}} Create raw text.
-	In raw text nodes, backslashes have no meaning
-
-	For arguments, Use matching numbers of !'s.
-	
+	In raw text nodes, backslashes have no meaning, and
+	are marked by matching {! and !}'s with matching numbers of !
 	e.g 	\foo{!{foo}!}	is	{foo}
 		\foo{!bar\!!}	is	bar\!
 		\foo{!!Hi!Ho!!} is	Hi!Ho
