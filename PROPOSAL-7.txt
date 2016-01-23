@@ -1,0 +1,250 @@
+"I also dream about a modern replacement for LaTeX designed from the ground up
+ to target multiple output formats (at least PDF, HTML, EPUB)"
+
+	-- John MacFarlane, author of Pandoc
+
+A markup language to produce PDF, HTML, EPUB documents
+--------------------------------------------------------------------------------
+
+- TeX like syntax, but vastly simpler parsing rules.
+- HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
+- More datastructures than just nodes and strings: lists, numbers, etc.
+
+Check the README file for an exploration of other formats and design choices.
+
+There's no accounting for taste:
+
+- No Ascii Art for formatting semantics. All commands follow same form
+- It should be trivial to include any text without escaping
+- Invisible whitespace should have no effect, for ex: trailing whitespace 
+- However, some commands may take an indented block.
+
+Non Goals:
+
+- Markdown esque shorthand. Will not be defined in the core language, but can be 
+  added by filters.
+
+- Programmable. The Language will be declarative, without macros.
+  Can be added by filters.
+
+Use cases:
+
+- Technical writing, long and short form. API documentation. 
+- Documents with embedded data, as well as links and forms. 
+- Configuration files/directives, as well as describing Schemas
+
+A structured markup language with inline object notation
+--------------------------------------------------------------------------------
+
+Rule 0: Everything is broken into words and paragraphs
+	Multiple spaces are treated as one space, e.g.
+ 		Foo    Bar  	is:	Foo Bar
+	Two line breaks mark the end of a paragraph, e.g
+        	Hello           is:     Hello
+                                
+                Thing                   Thing
+
+        One line break will be treated as a space between
+	lines, including trailing/leading whitespace e.g:
+	 	This		is: 	This Thing
+		Thing
+                			Over Here
+		Over                      
+               		Here                  
+
+Rule 1: \ is the substituiton character.
+
+	A \ indicates an escape, text substitution, or a command.
+
+	\\ is a literal \, and  \, \{ \} \[ \] \! \: \; \= produce literals.
+
+	Commands begin with a \ have a name, have a number of
+	arguments,and end when there is no more arguments, 
+	or a semicolon.
+
+	e.g \bar			No args
+	    hi \b{there} 		A text arg
+	    hello \foo[name:1, a:2]	A collection arg
+            \baz[1]{hello}{world!}	A mixture
+	    foo\bar[1,2]baz		No ;
+            Hello \foo;there		Ended with ;
+
+	Commands can take collections, then text arguments. Usually 
+	text inside [ .. ] is the text about how to format it, and
+	text inside { .. } is the text to be formatted. These
+	are covered in later rules.
+
+	Command names may contain numbers, letters, underscores (_) and
+	periods (.) but must not whitespace, control characters, or
+	puncutation marks, especially ones used by the markup : \ { } [ ] ! : ; 
+
+	Command names may include unicode numbers, letters.
+
+        A semicolon (;) marks the end of a command, and is not treated 
+        like text, so \foo[1]bar and \foo[1];bar are equivilent.
+
+        There are commands for document structure as well as
+        special characters too.
+
+	A command with no name just lifts the arguments into the
+	document, i.e \[1,2] is a list, \{ } is a text subelement,
+	\{! is a raw element!} 
+
+	A \ at the end of a line ignores the trailing whitespace
+	until the first word of the next line.
+
+	A \ at the end of the file is not an error, but will 
+	have no effect.
+	
+Rule 2: Text
+
+	Text is implicit, but subnodes can be created by
+	\{ .... }, or used as arguments to commands
+	e.g \foo{bar}{baz}
+	    \section{\h1{blah}}
+
+	You can use {{{, }}} too to break text over muliple lines.
+	    \lol{{{
+            a thing
+            that is lol
+            }}}
+
+	Note: When you use  {{{ ... }}} you do not need to
+	escape solitary }'s or }}'s inside.
+
+	Rationale: It's a lot easier to trace missing bracket errors
+	when you have to explicitly make it multiline.
+	
+Rule 3: Raw Text 
+	In raw text nodes, backslashes have no meaning, and
+	are marked by matching {! and !}'s with matching numbers of !
+	e.g 	\foo{!{foo}!}	is	{foo}
+		\foo{!bar\!!}	is	bar\!
+		\foo{!!Hi!Ho!!} is	Hi!Ho
+
+	{!... !} cannot have newlines but {{{! .... !}}} can
+
+	Commands can take multiple raw text arguments
+	Raw Text arguments cannot contain commands, or nest.
+	Whitespace in raw text arguments is preserved.
+	!'s are matched greedily, ie {!!!} is {!!! folowed by }
+
+Rule 4: Implicit text: indented blocks and single lines.
+	A command ending in : can be passed an indented text block
+	as an argument.  e.g:	
+		\cmd:			\cmd{{{hello
+			hello		}}}
+		blah
+	
+	Or, it can take up to the end of the line:
+		\cmd: hello
+
+	Any text indented more than the line of the original command
+	is considered to be part of the block.
+
+	The indented block continues until a line starts with less
+	or equal indentation to the line with the command, and then
+	the minimum whitespace prefix is removed from the block.
+
+	The indent may be tabs or spaces, however they are not
+	comparable. The minimum prefix is the set of whitespace
+	shared by all non blank indented lines in the block. 
+
+	If there is no consistent prefix for the block it will be 
+	treated as an error.
+
+	Blank or whitespace only lines will be treated
+	as part of the block.
+
+	If a command has ! at the end, the next consistently
+	indented block of text is used as a raw text argument
+	e.g:
+		\cmd!                    or \cmd! textblock
+			text block
+	
+Rule 5: Collections
+
+	A collection is a list of items, seperated by commas, 
+	with optional keys :i.e
+	   \foo[1,2,3]         	    \foo[a:2,b:2, c:3] 
+
+	There can be whitespace around the , or :
+	and it will be ignored.
+	
+	Collections can be multiline, but items cannot be multiline
+	Newlines imply commas, trailing commas are valid
+	i.e \[a:     is an error, but \[a:2, is not
+	      1,]                       b:3,] 
+	
+
+	Items can be
+	 special	\[true, false, nil, NaN, -Inf, +Inf]
+	 text		\["hi there",'hello','a4', ",",'a','''foo'''] 
+	 numbers, 	\[1,2,3.0,4.5] # hex floats, too!
+	 measurements	\[100%, 20mm]
+	 collections	\foo[[1,2,3,'foo', 'bar']]
+	 timestamps	hh:mm:ssTyyyy-mm-ddZ
+	Keys can be strings with =, or any item with :
+	 [a=1, b=2] or ["a": 1, "b": 2], or [123: "a", 456: "b"]
+	  a=nnn keys follow command rules for parsing.
+
+	items can be decorated
+	@url "....", @color "....", @set [ ... ]
+	
+	\struct{name}['a','b','c','d','e'] \size{a4} \enum{paper}["A4", "a5"]
+	some \ work inside ""'s 
+
+
+Rule 6: Unicode, and document model. 
+:
+	Command names are NFC normalized.
+	BOMs are ignored at beginning.
+	Input should be utf-8, without surrogate pair characters.
+	Unicode whitespace/para characters should be respected.
+
+	The document described is turned into an object, text blocks with
+	attributes, which can have an ordered list of children, which can
+	be iterated through, or accessed by key. This is similar to the data
+	structure used in collection arguments
+
+Changelog
+--------------------------------------------------------------------------------
+
+- Proposal 7
+
+No commands in keys, strings/items only, decorated items.
+
+- Proposal 6
+
+- Some cleanup and reordering. Collection arguments have grown into
+an object notation, which felt inevitable. Either the markup language 
+supported nested collections or people would ad-hoc them into strings
+
+- Proposal 5
+
+- Nailing down line continuations, reordering rules. Fixing
+  indentation semantics, whitespace handling.
+- Cleaning up most of the spec. ; *are* optional, bare commands are good too
+- Explained justification of {}/{{{}}}
+
+- Proposal 4
+
+- Made unicode choices
+- Use !, !!, etc for raw text blocks. Allows escaping without subsitutions
+- Added back indented blocks for non raw text.
+- Allowed _ and . in names.
+- Line contiuations
+
+Proposal 2/3:
+- Fleshing out semantics of names and arguments.
+
+Proposal 1:
+- Functions take any variety of text and list args, but only
+  raw blocks can be indented.
+- Linebreaks are ignored.
+
+Proposal 0:
+
+- Added {{{}}} , raw blocks through function name suffix \foo!
+- Functions take multiple args and text block, optionally indented.
+- Args can be named, linebreaks are literal
