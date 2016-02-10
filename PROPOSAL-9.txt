@@ -1,0 +1,378 @@
+remarkable: A markup language to produce PDF, HTML, EPUB documents from text
+--------------------------------------------------------------------------------
+                                               (There’s no accounting for taste)
+
+“I also dream about a modern replacement for LaTeX designed from the ground up
+ to target multiple output formats (at least PDF, HTML, EPUB)”
+
+	-- John MacFarlane, author of Pandoc
+
+Wishlist:
+
+- Uniform TeX like syntax with simple 
+- HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
+- JSON esqe arguments rather than just html attributes/latex options
+
+Use cases:
+
+- Technical writing, long and short form. API documentation. 
+- Documents with embedded data, as well as links and forms. 
+- Configuration files/directives, as well as describing Schemas
+
+Design choices
+
+- a single command akin to <foo>text</foo> and \foo{text} in latex
+- relatively uniform escaping rules (unlike tex's \\)
+- trailing whitespace should have no effect (unlike markdown)
+- comments, trailing commas should be ok (unlike json)
+- different forms for raw, multiline, single line arguments (like RST)
+
+Design refusals:
+
+- Markdown esque shorthand. Will not be defined in the core language, but can be
+  added by filters.
+
+- Programmable. The Language will be declarative, without macros.
+  Can be added by filters.
+
+Check the README file for an exploration of other formats and design choices.
+
+
+A structured markup syntax with inline object notation
+--------------------------------------------------------------------------------
+
+Rule 0: Whitespace: Everything is broken into words and paragraphs
+
+	Multiple spaces are treated as one space, e.g.
+
+ 		Foo    Bar  	is:	Foo Bar
+
+	Two line breaks mark the end of a paragraph, e.g
+
+        	Hello           is:     Hello
+                                
+                Thing                   Thing
+
+        One line break will be treated as a space between
+	lines, including trailing/leading whitespace e.g:
+
+	 	This		is: 	This Thing
+		Thing
+                			Over Here
+		Over                      
+               		Here                  
+
+	A line break can be escaped with the \ character,
+	whitespace too, which takes us to Rule 1:
+	
+
+Rule 1: \ is the substituiton character.
+
+	A \ indicates an escape, text substitution, or a command.
+
+	\\ is a literal \
+
+	A \ at the end of a line ignores the trailing whitespace
+	until the first word of the next line.
+
+	A \ at the end of the file is not an error, but will 
+	have no effect.
+
+	\n, \r, \u{0xff}, work as expected, but \no is not \n;o
+	it is the command ‘no’.
+
+	Commands begin with a \ have a name, have a number of
+	arguments,and end when there is no more arguments, 
+	or a semicolon.
+
+	e.g \bar			No args
+	    hi \b<there> 		A text arg
+	    hello \foo{name:1, a:2}	A collection arg
+            \baz{1}<hello>
+	    foo\bar{1,2}baz		No ;
+            Hello \foo;there		Ended with ;
+
+	Commands can take collections, then text arguments. Usually 
+	what’s inside { .. } is the text about how to format it, and
+	what’s inside < .. > is the text to be formatted. These
+	are covered in later rules.
+
+	Command names may contain numbers, letters, underscores (_) and
+	periods (.) but must not whitespace, control characters, or
+	puncutation marks, including ones used by the markup : \ < > { } ! : ; 
+
+	Command names may include unicode numbers, letters.
+
+        A semicolon (;) marks the end of a command, and is not treated 
+        like text, so \foo{1}bar and \foo{1};bar are equivilent. 
+	\foo{1}\;bar has a literal ;
+
+	
+Rule 2: Text
+
+	Text is implicit, but subnodes can be created by
+	using commands:
+	
+	e.g \foo<bar>
+	    \section< \h1<blah> >
+
+	You can use <<<, >>> too to break text over muliple lines.
+	    \lol<<<
+            a thing
+            that is \b<lol>
+            >>>
+
+	Note: When you use  <<< ... >>> you do not need to
+	escape solitary >’s or >>’s inside.
+
+	Rationale: It’s a lot easier to trace missing bracket errors
+	when you have to explicitly make it multiline.
+	
+Rule 3: Raw Text 
+
+	In raw text nodes, backslashes have no meaning, and
+	are marked by matching <! and !>’s with matching numbers of !
+
+	e.g 	\foo<! <foo> !>	is	<foo>
+		\foo<! bar\! !>	is	bar\!
+		\foo<!! Hi!Ho !!> is	Hi!Ho
+
+	<!... !> cannot have newlines but <<<! .... !>>> can
+
+	Commands can take multiple raw text arguments
+	Raw Text arguments cannot contain commands, or nest.
+	Trailing and leading whitespace is stripped, but othr
+	whitespace in raw text arguments is preserved.
+	!’s are matched greedily, ie <!!!> is <!!! folowed by >
+
+Rule 4: Implicit arguments: indented blocks and single lines.
+
+	A command ending in : can be passed an indented text block
+	as an argument.  e.g:	
+
+		\cmd:			\cmd<hello> blah
+			hello		
+		blah
+	
+	Or, it can take up to the end of the line:
+
+		\cmd: hello
+
+	It cannot do both. 
+		
+		\cmd: foo	is 	\cmd<foo> bar
+		bar 
+
+	Any text indented more than the line of the original command
+	is considered to be part of the block.
+
+	The indented block continues until a line starts with less
+	or equal indentation to the line with the command, and then
+	the minimum whitespace prefix is removed from the block.
+
+	The indent may be tabs or spaces, however they are not
+	comparable. The minimum prefix is the set of whitespace
+	shared by all non blank indented lines in the block. 
+
+	If there is no consistent prefix for the block it will be 
+	treated as an error.
+
+	Blank or whitespace only lines will be treated
+	as part of the block.
+
+	If a command has ! at the end, the next consistently
+	indented block of text is used as a raw text argument
+	e.g:
+		\cmd!                    or \cmd! textblock
+			text block
+	TODO: \ul["a","b","b",\text{a}] / equiv. 
+	      lines starting with > in indented block demarcate
+	      list elements.
+	
+Rule 5: Collection Arguments
+
+	A collection is a list of items, seperated by commas, 
+	with optional keys, immediately after a command :i.e
+
+	   \foo[1,2,3]         	    \foo["a":2,"b":2, "c":3] 
+	   \bar{1,2,} 		    \bar{a:1, b:2}
+
+	There can be whitespace around the , or :
+	and it will be ignored.
+	
+
+	Items can be:
+
+	 special	true, false, nil, NaN, -Inf, +Inf
+			booleans, builtins.
+
+	 text		"hi there",'hello','a4', ",",'a','''foo'''
+			with either matching ", ', """, or '''
+			the triple versions are multi line.
+
+	 numbers 	1,2,3.0,4.5, 0xFF 
+			-3 +4 decimal numbers, 1.34 rationals
+			0b01010 binary, 0xFF hexadecimal, 0o10 octal, 
+			hex floats too. 123_456_789.0 too.
+
+	Items can be any scalar	item, but also a collection too.
+	
+		[1,[2,3,3],4] 	["a":[1,2,3], "b":[3,4,5]]
+
+	Collections can be {...} or [...]. A [] collection allows
+	no keys, scalar keys, or a mix of no key and scalar key.
+	Keys must be unique:
+	
+		[1,2,3] [1,2,3, "a":4, "b":5]
+
+	A {} collection can either have no keys, or all keys. Keys
+	must be strings which match the rules for command names:
+
+		{1,2,3}, {a:1, b:2, c:3}
+	
+	Items can also be decorated to classify a simpler data
+	structure, or for file names, url paths, date times, etc:	
+	
+		@url "...", @file "...", @date "..."
+		@list [ ... ], @set { ... }
+		 
+
+	(nb unlike lua tables, the item in position 0 and the item
+	under key 0 are not necessarily the same item)
+
+	Newlines imply commas, trailing commas are valid.
+	Extra commas do not imply missing elements.
+
+	i.e  {a:         is an error, but {a:2,      is not
+	       1,}  	                    b:3,} 
+
+	# is a comment inside of a collection until the end of the line:
+
+		[
+			"a":1, # Test
+			"b":2, # Yes
+		] 
+
+	some \ escapes work inside strings, but not commands. Commands
+	cannot be items or keys.
+
+
+Rule 6: Text and document model. 
+:
+	Command names are NFC normalized.
+	BOMs are ignored at beginning.
+	Input should be UTF-8, without surrogate pair characters.
+	Unicode whitespace/paragraph characters should be respected.
+
+	The document described is turned into an object, text blocks with
+	attributes, which can have an ordered list of children, which can
+	be iterated through, or accessed by key. This is similar to the data
+	structure used in collection arguments
+
+Changelog
+--------------------------------------------------------------------------------
+
+Changes:
+	- Explain nested tags
+	- Explain argument stacking?
+	- parenthesis in data minilang
+	- whitespace stripping in raw text.
+
+Proposal 9
+
+- Trailing, leading whitespace in raw arguments is stripped
+	 {! foo !} is {foo}, \cmd: foo is \cmd{foo}
+	c.f \foo: .... x
+- () to allow multiline items, i.e "a": (new lines ignored) collection argument
+  ala python
+- Dom elements take only one text block, one collection block
+  \true{}<> \true{} \true<> \true all equiv
+
+- Dom Elements are tagged items and vice versa 
+
+	  @url "...." is \url<! http:/// !>
+	  \para{ ... } is @para ["...", "...", "..."]
+	  @set { ...} is \set{1,2,3}
+
+     should have canonicalized textual serialiazation and data serialiaztion
+   i.e a data language document always starts with \object{}
+   all untagged items should be named nodes, i.e 1 is \int{1}, \true{} 
+
+  Thus: Dom elements can be inside of collection arguments, i.e
+	  \ul[\para<a>, \para<b>] 
+	or @ul 
+
+  intent: should be able to build pandoc esque @para @word ast
+	https://github.com/jgm/pandocfilters/blob/master/pandocfilters.py#L131	
+	serialize to twelve and back, and then maybe use above to convert to pandoc
+
+  remarkable is *sugar*, even if it doesn't seem that compared to markdown for
+  writing a dom in the data language.
+	i.e @document { meta: , body: [ @header "...", @para "..." ] }
+
+  start with data language, add tagged objects, copy in the pandoc tags
+  then add textual arguments, i.e \foo{1,2,3} is @foo {1,2,3}, then
+  add text args: \h{a} is @header ["a"], \h[opts]{a} should be @header(opts) ["a"]
+
+- Collection should take intented argument, akin to raw and plain text block
+  maybe?
+  \ul:
+     > one
+
+     > two
+       
+       two continued
+
+     > three
+
+- Maybe add ascii sugar back in, as it is no longer against the grain
+  It *is* sugar, but for a document object model, not a markup language.
+    
+
+
+Proposal 8
+
+- Use \foo< ... > to free up {} [] for collections.
+- Realised \<...> can’t be right, as \< escapes.
+- Cleaned up Collections to be a superset of json
+
+Proposal 7
+
+- No commands in keys, strings/items only, decorated items.
+
+Proposal 6
+
+- Some cleanup and reordering. Collection arguments have grown into
+an object notation, which felt inevitable. Either the markup language 
+supported nested collections or people would ad-hoc them into strings
+
+Proposal 5
+
+- Nailing down line continuations, reordering rules. Fixing
+  indentation semantics, whitespace handling.
+- Cleaning up most of the spec. ; *are* optional, bare commands are good too
+- Explained justification of {}/{{{}}}
+
+Proposal 4
+
+- Made unicode choices
+- Use !, !!, etc for raw text blocks. Allows escaping without subsitutions
+- Added back indented blocks for non raw text.
+- Allowed _ and . in names.
+- Line contiuations
+
+Proposal 2/3:
+
+- Fleshing out semantics of names and arguments.
+
+Proposal 1:
+
+- Functions take any variety of text and list args, but only
+  raw blocks can be indented.
+- Linebreaks are ignored.
+
+Proposal 0:
+
+- Added {{{ }}} , raw blocks through function name suffix \foo!
+- Functions take multiple args and text block, optionally indented.
+- Args can be named, linebreaks are literal
