@@ -1,25 +1,33 @@
+remarkable: A markup language to produce PDF, HTML, EPUB documents from text
+--------------------------------------------------------------------------------
+                                               (There’s no accounting for taste)
+
 “I also dream about a modern replacement for LaTeX designed from the ground up
  to target multiple output formats (at least PDF, HTML, EPUB)”
 
 	-- John MacFarlane, author of Pandoc
 
-remarkable: A markup language to produce PDF, HTML, EPUB documents
---------------------------------------------------------------------------------
+Wishlist:
 
-Check the README file for an exploration of other formats and design choices.
-
-- TeX like syntax, but vastly simpler parsing rules.
+- Uniform TeX like syntax with simple 
 - HTML, RST, LaTeX like semantics, i.e section, h1, strong, footnote
-- More datastructures than just nodes and strings: lists, numbers, etc.
+- JSON esqe arguments rather than just html attributes/latex options
 
-Design choices (There’s no accounting for taste):
+Use cases:
 
-- No Ascii Art for formatting semantics. All commands follow same form
-- It should be trivial to include any text without codepoint escaping
-- Invisible whitespace should have no effect, for ex: trailing whitespace 
-- However, some commands may take an indented block.
+- Technical writing, long and short form. API documentation. 
+- Documents with embedded data, as well as links and forms. 
+- Configuration files/directives, as well as describing Schemas
 
-Non Goals:
+Design choices
+
+- a single command akin to <foo>text</foo> and \foo{text} in latex
+- relatively uniform escaping rules (unlike tex's \\)
+- trailing whitespace should have no effect (unlike markdown)
+- comments, trailing commas should be ok (unlike json)
+- different forms for raw, multiline, single line arguments (like RST)
+
+Design refusals:
 
 - Markdown esque shorthand. Will not be defined in the core language, but can be
   added by filters.
@@ -27,11 +35,7 @@ Non Goals:
 - Programmable. The Language will be declarative, without macros.
   Can be added by filters.
 
-Use cases:
-
-- Technical writing, long and short form. API documentation. 
-- Documents with embedded data, as well as links and forms. 
-- Configuration files/directives, as well as describing Schemas
+Check the README file for an exploration of other formats and design choices.
 
 
 A structured markup syntax with inline object notation
@@ -116,7 +120,7 @@ Rule 2: Text
 	You can use <<<, >>> too to break text over muliple lines.
 	    \lol<<<
             a thing
-            that is lol
+            that is \b<lol>
             >>>
 
 	Note: When you use  <<< ... >>> you do not need to
@@ -233,8 +237,8 @@ Rule 5: Collection Arguments
 	(nb unlike lua tables, the item in position 0 and the item
 	under key 0 are not necessarily the same item)
 
-	Collections can be multiline, but items cannot be multiline
-	Newlines imply commas, trailing commas are valid
+	Newlines imply commas, trailing commas are valid.
+	Extra commas do not imply missing elements.
 
 	i.e  {a:         is an error, but {a:2,      is not
 	       1,}  	                    b:3,} 
@@ -265,9 +269,23 @@ Rule 6: Text and document model.
 Changelog
 --------------------------------------------------------------------------------
 
+Changes:
+	- Explain nested tags
+	- Explain argument stacking?
+	- parenthesis in data minilang
+	- whitespace stripping in raw text.
+
+Under consideration
+- Allowing DOM elements inside collections. (likely, no, want a pure data for
+  config)
+- Whitespace in raw arguments {! foo !} is {foo}, \cmd: foo is \cmd{foo}
+	c.f \foo: .... x
+- () to allow multiline items, i.e "a": (new lines ignored) in data lang
+- list examples/prototypes. aka the "lists are awful" problem ? maybe > in blocks
+
 Proposal 8
 
-- Use \foo< ... >
+- Use \foo< ... > to free up {} [] for collections.
 - Realised \<...> can’t be right, as \< escapes.
 - Cleaned up Collections to be a superset of json
 
